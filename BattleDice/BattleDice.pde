@@ -1,7 +1,7 @@
 
 
 // Grid Properties
-float tileRadius = 30;
+float tileRadius = 20;
 float hexRatio = 0.8457;
 PVector gridPos; // the TOP-left corner of the grid.
 Cell[][] gridCells;
@@ -31,7 +31,16 @@ void drawGridCells() {
   translate(gridPos.x, gridPos.y);
   for (int i = 0; i < gridCells.length; i++) {
     for (int j = 0; j < gridCells[i].length; j++) {
-      gridCells[i][j].draw();
+      if (gridCells[i][j].myCountry != null) {
+        gridCells[i][j].drawShadow();
+      }
+    }
+  }
+  for (int i = 0; i < gridCells.length; i++) {
+    for (int j = 0; j < gridCells[i].length; j++) {
+      if (gridCells[i][j].myCountry != null) {
+        gridCells[i][j].draw();
+      }
     }
   }
 

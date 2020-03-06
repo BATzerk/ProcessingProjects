@@ -12,7 +12,7 @@ Cell getCell(int col, int row) {
 Cell getRandomCell() {
   Cell ret;
   do {
-    ret = getCell(floor(random(10)), floor(random(10)));
+    ret = getCell(floor(random(gridCells.length)), floor(random(gridCells[0].length)));
   } while (ret == null);
   return ret;
 }

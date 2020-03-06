@@ -26,11 +26,13 @@ class Cell
   }
 
   // ==== DRAW ====
-  public void draw() {
+  public void drawShadow() {
     fill(100);
-    if (myCountry != null) {
-      fill(color(myCountry.ID * 25, 122, 255));
-    }
+    noStroke();
+    drawHexagon(PVector.add(screenPos, new PVector(0, 4)));
+  }
+  public void draw() {
+    fill(color(myCountry.ID * 255/countries.length, 122, 255));
     stroke(70);
     strokeWeight(1);
     drawHexagon(screenPos);

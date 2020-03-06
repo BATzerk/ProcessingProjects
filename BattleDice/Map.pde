@@ -28,7 +28,11 @@ class Country
 }
 
 void growCountryStep() {
+  int maxNumCells = 14;
   for (int i = 0; i < countries.length; i++) {
+    if (countries[i].cells.size() == maxNumCells) {
+      continue;
+    }
     Cell newFriend;
     int limit = 100;
     do {
