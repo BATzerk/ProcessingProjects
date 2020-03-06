@@ -3,7 +3,7 @@ import java.util.LinkedList;
 class Country
 {
   int myTeamIndex = -1;
-  int numDice = 0;
+  int numDice = 1;
   LinkedList<Cell> cells;
   LinkedList<Country> neighbors;
   int ID;
@@ -24,6 +24,18 @@ class Country
   }
 
   void draw() {
+    for (int i=0; i<cells.size(); i++) {
+      Cell thisCell = (Cell) cells.get(i);
+      for (int face=0; face<NUM_FACES; face++) {
+        Cell otherCell = thisCell.getNeighbor(face);
+        boolean isBorder = otherCell==null || thisCell.myCountry!=otherCell.myCountry;
+        if (isBorder) {
+          stroke(80);
+          strokeWeight(4);
+          drawHexLine(thisCell.gridPos, face);
+        }
+      }
+    }
   }
 }
 
