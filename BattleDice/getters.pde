@@ -17,6 +17,15 @@ Cell getRandomCell() {
   return ret;
 }
 
+Cell getCellByScreenPos(float x, float y) {  
+  int mouseRow = round((y - gridPos.y) / (tileRadius * 3/2));  
+  float xOffset = mouseRow % 2 == 0 
+    ? xOffset = tileRadius*hexRatio
+    : 0;
+  int mouseCol = round((x - gridPos.x - xOffset) / (tileRadius * 2 * hexRatio));
+  return getCell(mouseCol, mouseRow);
+}
+
 float getScreenX(float col, float row) {
   float xOffset = 0;
   if (row%2==0) xOffset = tileRadius*hexRatio;
