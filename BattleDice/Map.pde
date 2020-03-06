@@ -43,6 +43,24 @@ class Country
       i++;
     }
   }
+  
+  void addNeighborsToSet(Set ids, Set checked) {
+    checked.add(this.ID);
+    ids.add(this.ID);
+    for (int i = 0; i < this.neighbors.length; i++) {
+      ids.add(this.neighbors[i].ID);
+      if (!checked.contains(this.neighbors[i].ID)) {
+        this.neighbors[i].addNeighborsToSet(ids, checked);
+      }
+    }
+  }
+  
+  int countCountriesOnIsland() {
+    Set<Integer> ids = new HashSet<Integer>();
+    Set<Integer> checked = new HashSet<Integer>();
+    this.addNeighborsToSet(ids, checked);
+    return ids.size();
+  }
 
   void drawMyCells() {
     displayOffsetY = selectedCountryIndex==ID ? -8 : 0;

@@ -80,6 +80,11 @@ boolean isCurrentGridLayoutGood() {
     if (countries[i].cells.size() < MIN_CELLS_PER_COUNTRY) { return false; }
   }
   
+  // Are all the countries on the same island?
+  if (countries.length > countries[0].countCountriesOnIsland()) {
+    return false;
+  }
+  
   if (getNumIslandsInGrid() > 1) { return false; }
   
   // Looks good!
