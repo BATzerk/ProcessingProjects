@@ -9,6 +9,11 @@ PVector gridPos; // the TOP-left corner of the grid.
 Cell[][] gridCells;
 Country[] countries;
 
+// Game Loop
+int numOfPlayers = 4;
+int currentPlayerIndex = 0;
+
+int selectedCountryIndex = -1;
 
 // ======== SETUP ========
 void setup() {
@@ -17,8 +22,6 @@ void setup() {
 
   remakeGridToGoodLayout();
 }
-
-
 
 
 // ======== DRAW ========
