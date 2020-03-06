@@ -1,6 +1,7 @@
 
 
 // Grid Properties
+final int NUM_FACES = 6; // it's hip to be hex.
 float tileRadius = 20;
 float hexRatio = 0.8457;
 PVector gridPos; // the TOP-left corner of the grid.
@@ -67,6 +68,19 @@ void drawHexagon(float x, float y) {
   endShape();
   //rotate(-PI/2);
   translate(-x, -y); // popMatrix
+}
+void drawHexLine(Vector2Int gridPos, int face) {
+  pushMatrix();
+  translate(getScreenX(gridPos.x,gridPos.y), getScreenY(gridPos.y));
+  switch (face) {
+    case 0: line(0,-tileRadius,   tileRadius*hexRatio, -tileRadius*0.5); break;
+    case 1: line( tileRadius*hexRatio, -tileRadius*0.5,   tileRadius*hexRatio, tileRadius*0.5); break;
+    case 2: line(tileRadius*hexRatio, tileRadius*0.5, 0,tileRadius); break;
+    case 3: line(0,tileRadius, -tileRadius*hexRatio, tileRadius*0.5); break;
+    case 4: line(-tileRadius*hexRatio, tileRadius*0.5, -tileRadius*hexRatio, -tileRadius*0.5); break;
+    case 5: line(-tileRadius*hexRatio, -tileRadius*0.5, 0,-tileRadius); break;
+  }
+  popMatrix();
 }
 
 
