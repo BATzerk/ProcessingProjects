@@ -1,11 +1,13 @@
 import java.util.LinkedList;
+import java.util.HashSet;
+import java.util.Set;
 
 class Country
 {
   int myTeamIndex = -1;
   int numDice = 1;
   LinkedList<Cell> cells;
-  LinkedList<Country> neighbors;
+  Country[] neighbors;
   int ID;
   float displayOffsetY; // for raising up the selected country.
 
@@ -23,13 +25,31 @@ class Country
   Cell getRandomEdgeCell() {
     return cells.get(floor(random(cells.size())));
   }
-  
+
+  void learnNeighbors() {
+    Set<Integer> set = new HashSet<Integer>();
+    for (int i = 0; i < cells.size (); i++) {
+      for (int face = 0; face < NUM_FACES; face++) {
+        Cell ncell = cells.get(i).getNeighbor(face);
+        if (ncell != null && ncell.myCountry != null) {
+          set.add(ncell.myCountry.ID);
+        }
+      }
+    }
+    this.neighbors = new Country[set.size()];
+    int i = 0;
+    for (int id : set) {
+      neighbors[i] = countries[id];
+      i++;
+    }
+  }
+
   void drawMyCells() {
     displayOffsetY = selectedCountryIndex==ID ? -8 : 0;
-    
+
     pushMatrix();
     translate(0, displayOffsetY);
-    for (int i=0; i<cells.size(); i++) {
+    for (int i=0; i<cells.size (); i++) {
       Cell cell = (Cell) cells.get(i);
       cell.draw();
     }
@@ -38,7 +58,7 @@ class Country
   void drawMyCellsShadow() {
     pushMatrix();
     translate(0, displayOffsetY);
-    for (int i=0; i<cells.size(); i++) {
+    for (int i=0; i<cells.size (); i++) {
       Cell cell = (Cell) cells.get(i);
       cell.drawShadow();
     }
@@ -47,7 +67,7 @@ class Country
   void drawBorders() {
     pushMatrix();
     translate(0, displayOffsetY);
-    for (int i=0; i<cells.size(); i++) {
+    for (int i=0; i<cells.size (); i++) {
       Cell thisCell = (Cell) cells.get(i);
       for (int face=0; face<NUM_FACES; face++) {
         Cell otherCell = thisCell.getNeighbor(face);
