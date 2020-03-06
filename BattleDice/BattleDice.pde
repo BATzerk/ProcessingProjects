@@ -3,6 +3,7 @@
 // Grid Properties
 final int NUM_FACES = 6; // it's hip to be hex.
 final int MIN_CELLS_PER_COUNTRY = 6;
+final int MAX_CELLS_PER_COUNTRY = 14;
 float tileRadius = 14;
 float hexRatio = 0.8457;
 PVector gridPos; // the TOP-left corner of the grid.
@@ -34,24 +35,40 @@ void draw() {
 void drawGridCells() {
   pushMatrix();
   translate(gridPos.x, gridPos.y);
-  for (int i = 0; i < gridCells.length; i++) {
-    for (int j = 0; j < gridCells[i].length; j++) {
-      if (gridCells[i][j].myCountry != null) {
-        gridCells[i][j].drawShadow();
-      }
-    }
+  
+  for (int i=0; i<countries.length; i++) {
+    if (i==selectedCountryIndex) { continue; } // skip the raised-up country.
+    countries[i].drawMyCellsShadow();
   }
-  for (int i = 0; i < gridCells.length; i++) {
-    for (int j = 0; j < gridCells[i].length; j++) {
-      if (gridCells[i][j].myCountry != null) {
-        gridCells[i][j].draw();
-      }
-    }
+  for (int i=0; i<countries.length; i++) {
+    if (i==selectedCountryIndex) { continue; } // skip the raised-up country.
+    countries[i].drawMyCells();
+    countries[i].drawBorders();
   }
+  
+  // Draw raised-up country.
+  if (selectedCountryIndex >= 0) {
+    countries[selectedCountryIndex].drawMyCellsShadow();
+    countries[selectedCountryIndex].drawMyCells();
+    countries[selectedCountryIndex].drawBorders();
+  }
+  
+//  for (int i = 0; i < gridCells.length; i++) {
+//    for (int j = 0; j < gridCells[i].length; j++) {
+//      if (gridCells[i][j].myCountry != null) {
+//        gridCells[i][j].drawShadow();
+//      }
+//    }
+//  }
+//  for (int i = 0; i < gridCells.length; i++) {
+//    for (int j = 0; j < gridCells[i].length; j++) {
+//      if (gridCells[i][j].myCountry != null) {
+//        gridCells[i][j].draw();
+//      }
+//    }
+//  }
 
-  for (int i = 0; i < countries.length; i++) {
-    countries[i].draw();
-  }
+  
   popMatrix();
 }
 

@@ -34,9 +34,33 @@ void remakeGridTotallyRandomly() {
   int numCountries = cols * rows / 18;
   countries = new Country[numCountries];
   for (int i = 0; i < countries.length; i++) {
-    countries[i] = new Country(i, getRandomCell());
+    countries[i] = new Country(i, getRandomEmptyCell());
   }
   for (int i = 0; i < 100; i++) {
     growCountryStep();
   }
 }
+
+void growCountryStep() {
+  for (int i = 0; i < countries.length; i++) {
+    if (countries[i].cells.size() == MAX_CELLS_PER_COUNTRY) {
+      continue;
+    }
+    Cell newFriend;
+    int numAttemptsLeft = 2;
+    do {
+      Cell edge = countries[i].getRandomEdgeCell();
+      int face = floor(random(NUM_FACES));
+      newFriend = edge.getNeighbor(face);
+      numAttemptsLeft --;
+    } while (numAttemptsLeft > 0 && (newFriend == null || newFriend.myCountry != null));
+
+    if (newFriend != null && newFriend.myCountry == null) {
+      countries[i].addCell(newFriend);
+    }
+  }
+}
+
+
+
+

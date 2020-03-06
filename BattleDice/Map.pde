@@ -7,11 +7,12 @@ class Country
   LinkedList<Cell> cells;
   LinkedList<Country> neighbors;
   int ID;
+  float displayOffsetY; // for raising up the selected country.
 
   Country(int index, Cell startingCell) {
-    cells = new LinkedList<Cell>();
+    this.ID = index;
+    this.cells = new LinkedList<Cell>();
     this.addCell(startingCell);
-    ID = index;
   }
 
   void addCell(Cell c) {
@@ -22,8 +23,30 @@ class Country
   Cell getRandomEdgeCell() {
     return cells.get(floor(random(cells.size())));
   }
-
-  void draw() {
+  
+  void drawMyCells() {
+    displayOffsetY = selectedCountryIndex==ID ? -8 : 0;
+    
+    pushMatrix();
+    translate(0, displayOffsetY);
+    for (int i=0; i<cells.size(); i++) {
+      Cell cell = (Cell) cells.get(i);
+      cell.draw();
+    }
+    popMatrix();
+  }
+  void drawMyCellsShadow() {
+    pushMatrix();
+    translate(0, displayOffsetY);
+    for (int i=0; i<cells.size(); i++) {
+      Cell cell = (Cell) cells.get(i);
+      cell.drawShadow();
+    }
+    popMatrix();
+  }
+  void drawBorders() {
+    pushMatrix();
+    translate(0, displayOffsetY);
     for (int i=0; i<cells.size(); i++) {
       Cell thisCell = (Cell) cells.get(i);
       for (int face=0; face<NUM_FACES; face++) {
@@ -36,26 +59,7 @@ class Country
         }
       }
     }
+    popMatrix();
   }
 }
 
-void growCountryStep() {
-  int maxNumCells = 14;
-  for (int i = 0; i < countries.length; i++) {
-    if (countries[i].cells.size() == maxNumCells) {
-      continue;
-    }
-    Cell newFriend;
-    int limit = 2;
-    do {
-      Cell edge = countries[i].getRandomEdgeCell();
-      int face = floor(random(6));
-      newFriend = edge.getNeighbor(face);
-      limit --;
-    } while (limit > 0 && (newFriend == null || newFriend.myCountry != null));
-
-    if (limit > 0) {
-      countries[i].addCell(newFriend);
-    }
-  }
-}

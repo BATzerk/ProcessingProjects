@@ -9,21 +9,24 @@ Cell getCell(int col, int row) {
   }
   return gridCells[col][row];
 }
-Cell getRandomCell() {
+Cell getRandomEmptyCell() {
   Cell ret;
   do {
     ret = getCell(floor(random(gridCells.length)), floor(random(gridCells[0].length)));
-  } while (ret == null);
+  } while (ret == null || ret.myCountry != null);
   return ret;
 }
 
-Cell getCellByScreenPos(float x, float y) {  
+Cell getPlayableCellByScreenPos(float x, float y) {  
   int mouseRow = round((y - gridPos.y) / (tileRadius * 3/2));  
   float xOffset = mouseRow % 2 == 0 
     ? xOffset = tileRadius*hexRatio
     : 0;
   int mouseCol = round((x - gridPos.x - xOffset) / (tileRadius * 2 * hexRatio));
-  return getCell(mouseCol, mouseRow);
+  Cell cell = getCell(mouseCol, mouseRow);
+  println(mouseCol, mouseRow);
+  if (cell.myCountry == null) { return null; } // No country? Not playable.
+  return cell;
 }
 
 float getScreenX(float col, float row) {
