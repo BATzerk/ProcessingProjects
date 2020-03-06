@@ -70,3 +70,27 @@ public Vector2Int getOffsetFromFace(int row, int face) {
   }
   throw new Error("BAD FACE");
 }
+
+boolean isCurrentGridLayoutGood() {
+  // Any countries that're TOO small??
+  for (int i=0; i<countries.length; i++) {
+    if (countries[i].cells.size() < MIN_CELLS_PER_COUNTRY) { return false; }
+  }
+  
+  if (getNumIslandsInGrid() > 1) { return false; }
+  
+  // Looks good!
+  return true;
+}
+
+int getNumIslandsInGrid() {
+  return 0; // TODO: This!
+}
+
+
+
+
+
+
+
+

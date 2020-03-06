@@ -2,7 +2,8 @@
 
 // Grid Properties
 final int NUM_FACES = 6; // it's hip to be hex.
-float tileRadius = 20;
+final int MIN_CELLS_PER_COUNTRY = 6;
+float tileRadius = 14;
 float hexRatio = 0.8457;
 PVector gridPos; // the TOP-left corner of the grid.
 Cell[][] gridCells;
@@ -14,7 +15,7 @@ void setup() {
   colorMode(HSB);
   size(800, 600);
 
-  remakeGrid();
+  remakeGridToGoodLayout();
 }
 
 
@@ -86,7 +87,14 @@ void drawHexLine(Vector2Int gridPos, int face) {
 
 void keyPressed() {
   if (key == ' ') {
-    remakeGrid();
+    remakeGridToGoodLayout();
   }
   println(key);
 }
+
+
+
+
+
+
+

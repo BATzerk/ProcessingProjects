@@ -31,7 +31,7 @@ class Country
         boolean isBorder = otherCell==null || thisCell.myCountry!=otherCell.myCountry;
         if (isBorder) {
           stroke(80);
-          strokeWeight(4);
+          strokeWeight(3.5);
           drawHexLine(thisCell.gridPos, face);
         }
       }
@@ -46,7 +46,7 @@ void growCountryStep() {
       continue;
     }
     Cell newFriend;
-    int limit = 100;
+    int limit = 2;
     do {
       Cell edge = countries[i].getRandomEdgeCell();
       int face = floor(random(6));
