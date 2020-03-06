@@ -5,7 +5,7 @@ float tileRadius = 30;
 float hexRatio = 0.8457;
 PVector gridPos = new PVector(100,100); // the TOP-left corner of the grid.
 Cell[][] gridCells;
-
+Country[] countries;
 
 
 // ======== SETUP ========
@@ -14,9 +14,11 @@ void setup() {
   size(800,600);
   
   remakeGrid();
-
-  println(gridCells[1][1].neighbor(0).gridPos); // 1, 0
-  println(gridCells[1][2].neighbor(0).gridPos); // 2, 1
+  
+  countries = new Country[10];
+  for (int i = 0; i < countries.length; i++) {
+    countries[i] = new Country(i, getRandomCell());
+  }
 }
 
 
@@ -35,6 +37,10 @@ void drawGridCells() {
     for (int j = 0; j < gridCells[i].length; j++) {
       gridCells[i][j].draw();
     }
+  }
+  
+  for (int i = 0; i < countries.length; i++) {
+    countries[i].draw();
   }
   popMatrix();
 }

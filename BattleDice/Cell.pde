@@ -3,16 +3,16 @@ class Cell
   // Properties
   Vector2Int gridPos;
   PVector screenPos;
-  
-  
+  Country myCountry = null;
+
   // ==== CONSTRUCTOR ====
   Cell(int col, int row) {
     gridPos = new Vector2Int(col, row);
-    screenPos = new PVector(getScreenX(col,row), getScreenY(row));
-  }
+    screenPos = new PVector(getScreenX(col, row), getScreenY(row));
+  } 
 
   // ==== GETTERS ====
-  Cell neighbor(int face) {
+  Cell getNeighbor(int face) {
     Vector2Int neighborPos = getMyOffsetFromFace(face);
     neighborPos.add(this.gridPos);
     return getCell(neighborPos);
@@ -20,16 +20,19 @@ class Cell
   Vector2Int getMyOffsetFromFace(int face) {
     return getOffsetFromFace(gridPos.y, face);
   }
-  
-  
-  
+
+  void setCountry(Country c) {
+    myCountry = c;
+  }
+
   // ==== DRAW ====
   public void draw() {
     fill(100);
+    if (myCountry != null) {
+      fill(color(myCountry.ID * 25, 122, 255));
+    }
     stroke(70);
     strokeWeight(1);
     drawHexagon(screenPos);
   }
-  
 }
-
