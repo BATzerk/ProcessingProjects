@@ -2,7 +2,7 @@ import java.util.LinkedList;
 
 class Country
 {
-  int ownedBy = -1;
+  int myTeamIndex = -1;
   int numDice = 0;
   LinkedList<Cell> cells;
   LinkedList<Country> neighbors;
@@ -42,8 +42,4 @@ void growCountryStep() {
       countries[i].addCell(newFriend);
     }
   }
-}
-
-void keyPressed() {
-  growCountryStep();
 }

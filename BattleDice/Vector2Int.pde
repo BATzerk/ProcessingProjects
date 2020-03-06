@@ -18,5 +18,3 @@ static class Vector2Int {
     return this.x + ", " + this.y;
   }
 }
-
-
