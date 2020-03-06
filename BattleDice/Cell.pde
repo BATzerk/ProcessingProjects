@@ -32,7 +32,6 @@ class Cell
     drawHexagon(PVector.add(screenPos, new PVector(0, 6)));
   }
   public void draw() {
-    fill(color(myCountry.ID * 255/countries.length, 122, 255));
     stroke(70);
     strokeWeight(1);
     drawHexagon(screenPos);

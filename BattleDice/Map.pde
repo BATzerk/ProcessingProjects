@@ -25,6 +25,19 @@ class Country
   Cell getRandomEdgeCell() {
     return cells.get(floor(random(cells.size())));
   }
+  
+  boolean isNeighboring(Country op) {
+    return isNeighboring(op.ID);
+  }
+  boolean isNeighboring(int id) {
+    if (id < 0) return false;
+    for (int i = 0; i < neighbors.length; i++) {
+      if (neighbors[i].ID == id) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   void learnNeighbors() {
     Set<Integer> set = new HashSet<Integer>();
@@ -36,6 +49,7 @@ class Country
         }
       }
     }
+    set.remove(this.ID);
     this.neighbors = new Country[set.size()];
     int i = 0;
     for (int id : set) {
@@ -61,12 +75,24 @@ class Country
     this.addNeighborsToSet(ids, checked);
     return ids.size();
   }
+  
+  color myColor() {
+    boolean isInDanger = selectedCountryIndex != this.ID && isNeighboring(selectedCountryIndex);
+     
+    if (myTeamIndex > -1) {
+      return isInDanger
+        ? color(myTeamIndex * 255/numOfPlayers, 70, 255)
+        : color(myTeamIndex * 255/numOfPlayers, 122, 255);
+    }
+     return isInDanger ? color(255) : color(32, 34, 234);
+  }
 
   void drawMyCells() {
     displayOffsetY = selectedCountryIndex==ID ? -8 : 0;
 
     pushMatrix();
     translate(0, displayOffsetY);
+    fill(myColor());
     for (int i=0; i<cells.size (); i++) {
       Cell cell = (Cell) cells.get(i);
       cell.draw();

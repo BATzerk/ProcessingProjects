@@ -11,6 +11,11 @@ void remakeGridToGoodLayout() {
       println("Error! Could not find good layout. Oh well, going with this one.");
     }
   }
+  
+  // Assign starting countries
+  for (i = 0; i < numOfPlayers; i++) {
+    countries[i].myTeamIndex = i;
+  }
 //  println("Tried times: " + i);
 }
 

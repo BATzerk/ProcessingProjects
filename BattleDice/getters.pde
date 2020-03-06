@@ -25,7 +25,7 @@ Cell getPlayableCellByScreenPos(float x, float y) {
   int mouseCol = round((x - gridPos.x - xOffset) / (tileRadius * 2 * hexRatio));
   Cell cell = getCell(mouseCol, mouseRow);
   println(mouseCol, mouseRow);
-  if (cell.myCountry == null) { return null; } // No country? Not playable.
+  if (cell == null || cell.myCountry == null) { return null; } // No country? Not playable.
   return cell;
 }
 
