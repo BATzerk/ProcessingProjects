@@ -27,4 +27,9 @@ void remakeGrid() {
   for (int i = 0; i < 100; i++) {
     growCountryStep();
   }
+  
+  // Learn neighbors
+  for (int i = 0; i < countries.length; i++) {
+    countries[i].learnNeighbors();
+  }
 }
