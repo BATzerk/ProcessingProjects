@@ -21,7 +21,7 @@ void startNewGame() {
         println("Error! Could not find good layout. Oh well, going with this one.");
       }
     }
-  
+
     // Assign starting countries
     for (i = 0; i < numOfPlayers; i++) {
       countries[i].myTeamIndex = i;
@@ -94,14 +94,22 @@ void endTurn() {
   // Set currPlayerIndex
   setCurrPlayerIndex((currPlayerIndex + 1) % numOfPlayers);
   currPlayerName = getPlayerName(currPlayerIndex);
-  // 
-  if (turnCount >= numOfPlayers) {
-    for (int i = 0; i < countries.length; i++) {
-      if (countries[i].myTeamIndex != currPlayerIndex) {
-        continue;
+
+  // === Distribute dice === //
+  if (turnCount >= numOfPlayers) { // don't give out dice on the first round
+    ArrayList<int[]> groups = getCountryGroups(currPlayerIndex);
+    for (int[] group: groups) { // for each group
+      int bank = group.length;
+      int index = 0;
+      int limit = 100; // in case we're all full
+      while (limit-- > 0 && bank > 0) {
+        Country country = countries[group[index]];
+        if (country.myDice < country.cells.size()) { // room to grow!
+          country.myDice ++;
+          bank--;
+        }
+        index = (index + 1) % group.length;
       }
-      countries[i].myDice += 1;
-      // TODO: Overflow full countries
     }
   }
   turnCount ++;
@@ -118,11 +126,3 @@ void moveIntoCountry(Country from, Country to) {
   from.myDice -= diceToGive;
   selectedCountryIndex = -1;
 }
-
-
-
-
-
-
-
-
