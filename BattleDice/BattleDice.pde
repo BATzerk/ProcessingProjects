@@ -21,7 +21,7 @@ void setup() {
   colorMode(HSB);
   size(800, 600);
   textAlign(CENTER, CENTER);
-  textFont(loadFont("AdobeDevanagari-Bold-48.vlw"));
+  // textFont(loadFont("AdobeDevanagari-Bold-48.vlw"));
 
   remakeGridToGoodLayout();
 }
@@ -46,13 +46,13 @@ void drawGridCells() {
   translate(gridPos.x, gridPos.y);
 
   for (int i=0; i<countries.length; i++) {
-    if (i==selectedCountryIndex) { 
+    if (i==selectedCountryIndex) {
       continue;
     } // skip the raised-up country.
     countries[i].drawMyCellsShadow();
   }
   for (int i=0; i<countries.length; i++) {
-    if (i==selectedCountryIndex) { 
+    if (i==selectedCountryIndex) {
       continue;
     } // skip the raised-up country.
     countries[i].drawMyCells();
@@ -107,23 +107,23 @@ void drawHexLine(Vector2Int gridPos, int face) {
   pushMatrix();
   translate(getScreenX(gridPos.x, gridPos.y), getScreenY(gridPos.y));
   switch (face) {
-  case 0: 
-    line(0, -tileRadius, tileRadius*hexRatio, -tileRadius*0.5); 
+  case 0:
+    line(0, -tileRadius, tileRadius*hexRatio, -tileRadius*0.5);
     break;
-  case 1: 
-    line( tileRadius*hexRatio, -tileRadius*0.5, tileRadius*hexRatio, tileRadius*0.5); 
+  case 1:
+    line( tileRadius*hexRatio, -tileRadius*0.5, tileRadius*hexRatio, tileRadius*0.5);
     break;
-  case 2: 
-    line(tileRadius*hexRatio, tileRadius*0.5, 0, tileRadius); 
+  case 2:
+    line(tileRadius*hexRatio, tileRadius*0.5, 0, tileRadius);
     break;
-  case 3: 
-    line(0, tileRadius, -tileRadius*hexRatio, tileRadius*0.5); 
+  case 3:
+    line(0, tileRadius, -tileRadius*hexRatio, tileRadius*0.5);
     break;
-  case 4: 
-    line(-tileRadius*hexRatio, tileRadius*0.5, -tileRadius*hexRatio, -tileRadius*0.5); 
+  case 4:
+    line(-tileRadius*hexRatio, tileRadius*0.5, -tileRadius*hexRatio, -tileRadius*0.5);
     break;
-  case 5: 
-    line(-tileRadius*hexRatio, -tileRadius*0.5, 0, -tileRadius); 
+  case 5:
+    line(-tileRadius*hexRatio, -tileRadius*0.5, 0, -tileRadius);
     break;
   }
   popMatrix();
@@ -136,9 +136,3 @@ void keyPressed() {
   }
   println(key);
 }
-
-
-
-
-
-

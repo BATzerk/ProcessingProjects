@@ -25,12 +25,12 @@ class Country
   Cell getRandomEdgeCell() {
     return cells.get(floor(random(cells.size())));
   }
-  
+
   boolean isNeighboring(Country op) {
     return isNeighboring(op.ID);
   }
   boolean isNeighboring(int id) {
-    if (id < 0) return false;
+    if (id < 0 || id == this.ID) return false;
     for (int i = 0; i < neighbors.length; i++) {
       if (neighbors[i].ID == id) {
         return true;
@@ -57,7 +57,7 @@ class Country
       i++;
     }
   }
-  
+
   void addNeighborsToSet(Set ids, Set checked) {
     checked.add(this.ID);
     ids.add(this.ID);
@@ -68,17 +68,20 @@ class Country
       }
     }
   }
-  
+
   int countCountriesOnIsland() {
     Set<Integer> ids = new HashSet<Integer>();
     Set<Integer> checked = new HashSet<Integer>();
     this.addNeighborsToSet(ids, checked);
     return ids.size();
   }
-  
+
   color myColor() {
-    boolean isInDanger = selectedCountryIndex != this.ID && isNeighboring(selectedCountryIndex);
-     
+    boolean isInDanger =
+      selectedCountryIndex > -1
+      && countries[selectedCountryIndex].myTeamIndex != this.myTeamIndex
+      && isNeighboring(selectedCountryIndex);
+
     if (myTeamIndex > -1) {
       return isInDanger
         ? color(myTeamIndex * 255/numOfPlayers, 70, 255)
@@ -126,4 +129,3 @@ class Country
     popMatrix();
   }
 }
-
