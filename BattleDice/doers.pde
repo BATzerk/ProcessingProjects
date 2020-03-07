@@ -6,15 +6,16 @@ void remakeGridToGoodLayout() {
   int i=0;
   for (i=0; i<=50; i++) { // try a bunch of times.
     remakeGridTotallyRandomly();
-    if (isCurrentGridLayoutGood()) { break; } 
+    if (isCurrentGridLayoutGood()) { break; }
     if (i>=20) {
       println("Error! Could not find good layout. Oh well, going with this one.");
     }
   }
-  
+
   // Assign starting countries
   for (i = 0; i < numOfPlayers; i++) {
     countries[i].myTeamIndex = i;
+    countries[i].myDice = 6;
   }
 //  println("Tried times: " + i);
 }
@@ -24,7 +25,7 @@ void remakeGridTotallyRandomly() {
   int rows = 22;
   float gw = cols * tileRadius * 2/3 * sqrt(6);
   float gh = rows * tileRadius * 1.4;
-  
+
   // Cells
   gridCells = new Cell[cols][rows];
   for (int i = 0; i < gridCells.length; i++) {
@@ -32,9 +33,9 @@ void remakeGridTotallyRandomly() {
       gridCells[i][j] = new Cell(i, j);
     }
   }
-  
+
   gridPos = new PVector((width - gw) / 2, (height - gh) / 2);
-  
+
   // Countries
   int numCountries = cols * rows / 18;
   countries = new Country[numCountries];
@@ -44,7 +45,7 @@ void remakeGridTotallyRandomly() {
   for (int i = 0; i < 100; i++) {
     growCountryStep();
   }
-  
+
   // Learn neighbors
   for (int i = 0; i < countries.length; i++) {
     countries[i].learnNeighbors();
@@ -70,7 +71,3 @@ void growCountryStep() {
     }
   }
 }
-
-
-
-

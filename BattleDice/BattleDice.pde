@@ -86,19 +86,25 @@ void drawGridCells() {
 }
 
 void drawHexagon(PVector pos) {
-  drawHexagon(pos.x, pos.y);
+  drawHexagon(pos.x, pos.y, tileRadius);
 }
 void drawHexagon(float x, float y) {
+  drawHexagon(x, y, tileRadius);
+}
+void drawHexagon(PVector pos, float radius) {
+  drawHexagon(pos.x, pos.y, radius);
+}
+void drawHexagon(float x, float y, float radius) {
   translate( x, y); // pushMatrix
   //rotate(PI/2);
   beginShape();
-  vertex(tileRadius*hexRatio, tileRadius*0.5);
-  vertex(0, tileRadius);
-  vertex(-tileRadius*hexRatio, tileRadius*0.5);
-  vertex(-tileRadius*hexRatio, -tileRadius*0.5);
-  vertex(0, -tileRadius);
-  vertex( tileRadius*hexRatio, -tileRadius*0.5);
-  vertex( tileRadius*hexRatio, tileRadius*0.5);
+  vertex(radius*hexRatio, radius*0.5);
+  vertex(0, radius);
+  vertex(-radius*hexRatio, radius*0.5);
+  vertex(-radius*hexRatio, -radius*0.5);
+  vertex(0, -radius);
+  vertex( radius*hexRatio, -radius*0.5);
+  vertex( radius*hexRatio, radius*0.5);
   endShape();
   //rotate(-PI/2);
   translate(-x, -y); // popMatrix

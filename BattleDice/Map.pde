@@ -5,7 +5,7 @@ import java.util.Set;
 class Country
 {
   int myTeamIndex = -1;
-  int numDice = 1;
+  int myDice = 0;
   LinkedList<Cell> cells;
   Country[] neighbors;
   int ID;
@@ -99,6 +99,11 @@ class Country
     for (int i=0; i<cells.size (); i++) {
       Cell cell = (Cell) cells.get(i);
       cell.draw();
+      if (i < myDice) {
+        fill(255);
+        drawHexagon(cell.screenPos, tileRadius / 2);
+        fill(myColor());
+      }
     }
     popMatrix();
   }
