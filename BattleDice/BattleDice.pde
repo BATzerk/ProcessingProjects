@@ -11,7 +11,7 @@ float tileRadius = 14;
 float hexRatio = 0.8457;
 PVector gridPos; // the TOP-left corner of the grid.
 Cell[][] gridCells;
-Country[] countries;
+Country[] countries=new Country[0];
 
 // Game Loop
 int numOfPlayers = 4;
@@ -73,14 +73,14 @@ void drawGridCells() {
   }
   for (int i=0; i<countries.length; i++) {
     if (i==selectedCountryIndex) { continue; } // skip the raised-up country.
-    countries[i].drawMyCells();
+    countries[i].drawMyCellsFill();
     countries[i].drawBorders();
   }
 
   // Draw raised-up country.
   if (selectedCountryIndex >= 0) {
     countries[selectedCountryIndex].drawMyCellsShadow();
-    countries[selectedCountryIndex].drawMyCells();
+    countries[selectedCountryIndex].drawMyCellsFill();
     countries[selectedCountryIndex].drawBorders();
   }
   

@@ -6,7 +6,7 @@ void startNewGame() {
   {
     setCurrPlayerIndex(0);
     turnCount = 1;
-    selectedCountryIndex = -1;
+    setSelectedCountryIndex(-1);
     isBattleMode = false;
     attackingCountry = null;
     defendingCountry = null;
@@ -87,8 +87,16 @@ void growCountryStep() {
 void setCurrPlayerIndex(int index) {
   currPlayerIndex = index;
   currPlayerName = getPlayerName(currPlayerIndex);
-  selectedCountryIndex = -1;
+  setSelectedCountryIndex(-1);
   isBattleMode = false;
+}
+void setSelectedCountryIndex(int index) {
+  selectedCountryIndex = index;
+  // Tell all countries what's up.
+  for (int i=0; i<countries.length; i++) {
+    boolean isSelectedCountry = i == selectedCountryIndex;
+    countries[i].displayOffsetY = isSelectedCountry ? -6 : 0;
+  }
 }
 void endTurn() {
   // Set currPlayerIndex
@@ -116,7 +124,7 @@ void moveIntoCountry(Country from, Country to) {
   }
   to.myDice = diceToGive;
   from.myDice -= diceToGive;
-  selectedCountryIndex = -1;
+  setSelectedCountryIndex(-1);
 }
 
 

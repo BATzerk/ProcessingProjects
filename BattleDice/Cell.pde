@@ -24,16 +24,4 @@ class Cell
   void setCountry(Country c) {
     myCountry = c;
   }
-
-  // ==== DRAW ====
-  public void drawShadow() {
-    fill(0, 70);
-    noStroke();
-    drawHexagon(PVector.add(screenPos, new PVector(0, 6)));
-  }
-  public void draw() {
-    stroke(70);
-    strokeWeight(1);
-    drawHexagon(screenPos);
-  }
 }

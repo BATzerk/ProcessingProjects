@@ -107,52 +107,64 @@ class Country
       selectedCountryIndex > -1
       && countries[selectedCountryIndex].myTeamIndex != this.myTeamIndex
       && isNeighboring(selectedCountryIndex);
-
-    if (myTeamIndex > -1) {
-      return isInDanger
-        ? color(teamHue(myTeamIndex), 70, 255)
-        : teamColor(myTeamIndex);
+    
+    color baseColor = myTeamIndex > -1 ? teamColor(myTeamIndex) : color(32,34,234);
+    if (!isInDanger) {
+      return baseColor;
     }
-     return isInDanger ? color(255) : color(32, 34, 234);
+    else {
+      float highlightAlpha = sinRange(millis()*0.01+ID, 0,1);
+      return lerpColor(baseColor, color(255,255,255), highlightAlpha);
+    }
   }
 
-  void drawMyCells() {
-    displayOffsetY = selectedCountryIndex==ID ? -8 : 0;
-
+  void drawMyCellsShapes() {
+    float displayOffsetY = selectedCountryIndex==ID ? -8 : 0;
     pushMatrix();
     translate(0, displayOffsetY);
-    fill(myColor());
     for (int i=0; i<cells.size (); i++) {
       Cell cell = (Cell) cells.get(i);
-      cell.draw();
+      drawHexagon(cell.screenPos);
+    }
+    popMatrix();
+  }
+  void drawMyCellsFill() {
+    // Cells
+    fill(myColor());
+    noStroke();
+    drawMyCellsShapes();
+    
+    // Dice
+    pushMatrix();
+    translate(0, displayOffsetY);
+    fill(255);
+    for (int i=0; i<cells.size (); i++) {
+      Cell cell = (Cell) cells.get(i);
       if (i < myDice) {
-        fill(255);
         drawHexagon(cell.screenPos, tileRadius / 2);
-        fill(myColor());
       }
     }
     popMatrix();
   }
   void drawMyCellsShadow() {
     pushMatrix();
-    translate(0, displayOffsetY);
-    for (int i=0; i<cells.size (); i++) {
-      Cell cell = (Cell) cells.get(i);
-      cell.drawShadow();
-    }
+    translate(0, 6); // offset for shadow.
+    fill(0, 40);
+    noStroke();
+    drawMyCellsShapes();
     popMatrix();
   }
   void drawBorders() {
     pushMatrix();
     translate(0, displayOffsetY);
+    stroke(80);
+    strokeWeight(3.5);
     for (int i=0; i<cells.size (); i++) {
       Cell thisCell = (Cell) cells.get(i);
       for (int face=0; face<NUM_FACES; face++) {
         Cell otherCell = thisCell.getNeighbor(face);
         boolean isBorder = otherCell==null || thisCell.myCountry!=otherCell.myCountry;
         if (isBorder) {
-          stroke(80);
-          strokeWeight(3.5);
           drawHexLine(thisCell.gridPos, face);
         }
       }
