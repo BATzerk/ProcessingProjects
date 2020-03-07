@@ -1,7 +1,7 @@
 
 
 void keyPressed() {
-  if (key == ' ') {
+  if (key == 'r') {
     startNewGame();
   }
   else if (key == 'a') {

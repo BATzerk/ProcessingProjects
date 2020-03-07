@@ -5,25 +5,24 @@ void AIExecuteNextStep() {
   
   Country[] selectableCountries = getSelectableCountries();
   
-  // No countries to pick from? End our turn!
-  if (selectableCountries.length == 0) {
+  boolean didDoAnAttack = false;
+  for (int i=0; i<selectableCountries.length; i++) {
+    setSelectedCountryIndex(selectableCountries[i].ID);
+    // Pick a random country to attack.
+    Country[] attackableCountries = getAttackableCountriesWithAttackAdvantage();
+    // We have countries to attack! Do attack!
+    if (attackableCountries.length > 0) {
+      Country selectedCountry = countries[selectedCountryIndex];
+      Country defendingCountry = attackableCountries[floor(random(0,attackableCountries.length))];
+      countryAttackOther(selectedCountry, defendingCountry);
+      didDoAnAttack = true;
+      break;
+    }
+  }
+  if (!didDoAnAttack) {
     startNextPlayerTurn();
     return;
   }
-  
-  // Pick a random country to select.
-  int randIndexInMyList = floor(random(0, selectableCountries.length));
-  setSelectedCountryIndex(selectableCountries[randIndexInMyList].ID);
-  // Pick a random country to attack.
-  Country[] attackableCountries = getAttackableCountries();
-  // No countries to attack?? End our turn early! Don't try again.
-  if (attackableCountries.length == 0) {
-    startNextPlayerTurn();
-    return;
-  }
-  Country selectedCountry = countries[selectedCountryIndex];
-  Country defendingCountry = attackableCountries[floor(random(0,attackableCountries.length))];
-  countryAttackOther(selectedCountry, defendingCountry);
   
   // Plan when to do next step. NOTE: FRAGILE! Timer runs concurrently with battle timer. IDEALLY, we'd only have ONE timer. It's "timeWhenNextStep", and when it's time, it'd call a function that handles what to do.
   timeWhenNextAIStep = millis() + (isBattleMode ? 3500 : 500);
@@ -39,22 +38,34 @@ Country[] getSelectableCountries() {
   // Convert to array.
   return list.toArray(new Country[list.size()]);
 }
-Country[] getAttackableCountries() {
+
+Country[] getAttackableCountriesWithAttackAdvantage() {
   // Safety check.
-  if (selectedCountryIndex < 0) {
-    return null;
-  }
+  if (selectedCountryIndex < 0) { return null; }
   Country selectedCountry = countries[selectedCountryIndex];
   ArrayList<Country> list = new ArrayList<Country>();
   for (int i=0; i<selectedCountry.neighbors.length; i++) {
-    if (mayCountryAttackOther(selectedCountry, selectedCountry.neighbors[i])) {
+    if (shouldCountryAttackOther(selectedCountry, selectedCountry.neighbors[i])) {
       list.add(selectedCountry.neighbors[i]);
     }
   }
   // Convert to array.
   return list.toArray(new Country[list.size()]);
 }
-boolean mayCountryAttackOther(Country attacker, Country defender) {
+Country[] getAttackableCountries() {
+  // Safety check.
+  if (selectedCountryIndex < 0) { return null; }
+  Country selectedCountry = countries[selectedCountryIndex];
+  ArrayList<Country> list = new ArrayList<Country>();
+  for (int i=0; i<selectedCountry.neighbors.length; i++) {
+    if (canCountryAttackOther(selectedCountry, selectedCountry.neighbors[i])) {
+      list.add(selectedCountry.neighbors[i]);
+    }
+  }
+  // Convert to array.
+  return list.toArray(new Country[list.size()]);
+}
+boolean canCountryAttackOther(Country attacker, Country defender) {
   // Can't attack same team.
   if (attacker.myTeamIndex == defender.myTeamIndex) { return false; }
   // Not enough dice to even attack, man.
@@ -63,6 +74,12 @@ boolean mayCountryAttackOther(Country attacker, Country defender) {
   if (attacker.myDice*6 <= defender.myDice) { return false; }
   // Sure, why not!
   return true;
+}
+boolean shouldCountryAttackOther(Country attacker, Country defender) {
+  // It isn't ALLOWED to attack? Return false, of course.
+  if (!canCountryAttackOther(attacker, defender)) { return false; }
+  // Return if attacker has dice advantage!
+  return attacker.myDice >= defender.myDice;
 }
 
 
