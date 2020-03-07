@@ -42,10 +42,10 @@ void draw() {
   background(240);
 
   drawGridCells();
-  
+
   if (isBattleMode) {
     int beenRollingFor = millis() - startedRolling;
-    if (beenRollingFor < 500) {
+    if (beenRollingFor < 1000) {
       rollBattleDice();
     }
     else if (beenRollingFor > 3000) {
@@ -55,6 +55,7 @@ void draw() {
       }
       else {
         attackingCountry.myDice = 1; // BONK!
+        selectedCountryIndex = -1;
       }
     }
     showBattleDice();
@@ -83,7 +84,7 @@ void drawGridCells() {
     countries[selectedCountryIndex].drawMyCells();
     countries[selectedCountryIndex].drawBorders();
   }
-  
+
   popMatrix();
 }
 
@@ -131,7 +132,3 @@ void drawHexLine(Vector2Int gridPos, int face) {
   }
   popMatrix();
 }
-
-
-
-
