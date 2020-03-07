@@ -79,12 +79,28 @@ public Vector2Int getOffsetFromFace(int row, int face) {
 boolean isCurrentGridLayoutGood() {
   // Any countries that're TOO small??
   for (int i=0; i<countries.length; i++) {
-    if (countries[i].cells.size() < MIN_CELLS_PER_COUNTRY) { return false; }
+    if (countries[i].cells.size() < MIN_CELLS_PER_COUNTRY) {
+      println("= Country too small");
+      return false;
+    }
   }
 
   // Are all the countries NOT on the same island? Return false.
   if (countries.length > countries[0].countCountriesOnIsland()) {
+    println("= More than one island");
     return false;
+  }
+
+  // Neighboring enemies
+  for (int i=0; i<countries.length; i++) {
+    if (countries[i].myTeamIndex > -1) {
+      for (int c = 0; c < countries[i].neighbors.length; c++) {
+        if (countries[i].neighbors[c].myTeamIndex > -1) {
+          println("= Neighboring enemies");
+          return false;
+        }
+      }
+    }
   }
 
   // Looks good!

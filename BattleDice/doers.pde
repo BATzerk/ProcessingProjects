@@ -14,19 +14,43 @@ void startNewGame() {
   }
   // ---- Remake Grid to Good Layout ----
   {
-    int i=0;
-    for (i=0; i<=50; i++) { // try a bunch of times.
+    println("\n=== brb, making new world ===");
+    int tries=0;
+    for (tries=0; tries<=5000; tries++) { // try a bunch of times.
       remakeGridTotallyRandomly();
-      if (isCurrentGridLayoutGood()) { break; }
-      if (i>=20) {
-        println("Error! Could not find good layout. Oh well, going with this one.");
-      }
-    }
 
-    // Assign starting countries
-    for (i = 0; i < numOfPlayers; i++) {
-      countries[i].myTeamIndex = i;
-      countries[i].myDice = NUM_STARTING_DICE_PER_TEAM;
+      // Assign starting countries
+      Set<Integer> invalid = new HashSet<Integer>(); // save taken and neighbors
+      int assigned = 0;
+      for (int i = 0; assigned < numOfPlayers && i < countries.length; i++) {
+        if (invalid.contains(i)) { // can't choose an existing neighbor
+          continue;
+        }
+        countries[i].myTeamIndex = assigned++;
+        countries[i].myDice = NUM_STARTING_DICE_PER_TEAM;
+
+        invalid.add(i);
+        for (int c = 0; c < countries[i].neighbors.length; c++) {
+          invalid.add(countries[i].neighbors[c].ID);
+        }
+      }
+
+      if (assigned < numOfPlayers) {
+        println("= Could only assign " + assigned + " players.");
+        continue;
+      }
+
+      // Moved so we see the error if we give up
+      boolean currentGridLayoutIsGood = assigned == numOfPlayers && isCurrentGridLayoutGood();
+
+      if (tries >= 50) {
+        println("= Error! Could not find good layout. Oh well, going with this one.");
+        break;
+      }
+
+      if (currentGridLayoutIsGood) {
+        break;
+      }
     }
   }
 }
