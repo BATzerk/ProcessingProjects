@@ -16,9 +16,12 @@ Country[] countries=new Country[0];
 // Game Loop
 int numOfPlayers = 4;
 int currPlayerIndex;
-boolean isAIExecutingTurn;
 boolean[] eliminated;
-float timeWhenNextAIStep; // in SECONDS.
+
+boolean isAIExecutingTurn;
+AI[] botPlayers;
+float timeWhenNextAIStep;
+
 String currPlayerName;
 // Time Variables
 float currTime; // in SECONDS.
@@ -79,7 +82,7 @@ void draw() {
 
   if (isAIExecutingTurn) {
     if (currTime > timeWhenNextAIStep) {
-      AIExecuteNextStep();
+      botPlayers[currPlayerIndex].executeNextStep();
     }
   }
 

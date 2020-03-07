@@ -5,6 +5,7 @@ void startNewGame() {
   // ---- Reset Gameplay Variables ----
   {
     eliminated = new boolean[numOfPlayers]; // assuming this fills false
+    botPlayers = new AI[numOfPlayers]; // assuming this fills false
     setCurrPlayerIndex(0);
     turnCount = 1;
     setSelectedCountryIndex(-1);
@@ -151,6 +152,11 @@ void startNextPlayerTurn() {
     }
   }
   turnCount ++;
+
+  // Run AI
+  if (botPlayers[currPlayerIndex] != null) {
+    botPlayers[currPlayerIndex].executeNextStep();
+  }
 }
 
 void countryAttackOther(Country attacker, Country defender) {
@@ -185,12 +191,3 @@ void moveIntoCountry(Country from, Country to) {
     eliminated[victimPlayerIndex] = true;
   }
 }
-
-
-
-
-
-
-
-
-
