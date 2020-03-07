@@ -108,7 +108,7 @@ float teamHue(int index) {
   return index * 255/numOfPlayers;
 }
 
-color lerpColor(color a, color b, float perc) {
+color lerpColorHSB(color a, color b, float perc) {
   float h = lerp(hue(a), hue(b), perc);
   float s = lerp(saturation(a), saturation(b), perc);
   float b = lerp(brightnes(a), brightnes(b), perc);
