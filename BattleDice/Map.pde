@@ -113,8 +113,9 @@ class Country
       return baseColor;
     }
     else {
-      float highlightAlpha = sinRange(millis()*0.01+ID, 0,1);
-      return lerpColor(baseColor, color(255,255,255), highlightAlpha);
+      float highlightAlpha = sinRange(millis()*0.008, 0.4,1);//+ID
+      color highlightColor = myTeamIndex>-1 ? color(teamHue(myTeamIndex),20,255) : color(255);
+      return lerpColor(baseColor, highlightColor, highlightAlpha);
     }
   }
 
@@ -137,11 +138,11 @@ class Country
     // Dice
     pushMatrix();
     translate(0, displayOffsetY);
-    fill(255);
+    fill(80);
     for (int i=0; i<cells.size (); i++) {
       Cell cell = (Cell) cells.get(i);
       if (i < myDice) {
-        drawHexagon(cell.screenPos, tileRadius / 2);
+        drawHexagon(cell.screenPos, tileRadius * 0.6);
       }
     }
     popMatrix();
