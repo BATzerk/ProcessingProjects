@@ -161,11 +161,14 @@ class Country
   }
 }
 
-ArrayList<int[]> getCountryGroups() {
+ArrayList<int[]> getCountryGroups(int teamIndex) {
   Set<Integer> counted = new HashSet<Integer>();
   ArrayList<int[]> groupList = new ArrayList<int[]>();
   for (int i = 0; i < countries.length; i++) {
-    if (!counted.contains(i)) {
+    if (
+      countries[i].myTeamIndex == teamIndex && // make sure it's the right team
+      !counted.contains(i)                     // make sure we haven't checked it yet
+    ) {
       int[] group = countries[i].getMyCountryGroup();
       for (int j = 0; j < group.length; j++) {
         counted.add(group[j]);
