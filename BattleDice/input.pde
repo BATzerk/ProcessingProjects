@@ -41,29 +41,29 @@ void mousePressed() {
 
   Country country = cellMouse.myCountry;
 
-  if (selectedCountryIndex == -1) {
+  if (selectedCountryIndex == -1) { // If no country selected
     if (
-      country.myTeamIndex == currentPlayerIndex &&
-      country.myDice > 1
+      country.myTeamIndex == currentPlayerIndex && // players can only select THEIR countries
+      country.myDice > 1                           // can't attack with only 1 die
     ) {
       selectedCountryIndex = country.ID;
     }
-  } else {
+  } else { // Clicking second country (already have selection)
     Country selectedCountry = countries[selectedCountryIndex];
-    // Switch country
-    if (country.myTeamIndex == currentPlayerIndex) {
-      selectedCountryIndex = country.ID;
+
+    if (country.myTeamIndex == currentPlayerIndex) { // another of player's countries?
+      selectedCountryIndex = country.ID; // switch
       return;
     }
 
     boolean isNeighbor = selectedCountry.isNeighboring(country);
-    if (!isNeighbor) {
+    if (!isNeighbor) { // clicking away to relo-- deselect
       selectedCountryIndex = -1;
       return;
     }
-    if (country.myTeamIndex == -1) {
+    if (country.myTeamIndex == -1) { // take empty countries
       moveIntoCountry(selectedCountry, country);
-    } else {
+    } else { // fight occupied countries
       setupBattle(selectedCountry, country);
     }
   }
