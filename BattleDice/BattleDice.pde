@@ -17,12 +17,11 @@ Country[] countries=new Country[0];
 int numOfPlayers = 4;
 int currPlayerIndex;
 boolean[] eliminated;
-
+String currPlayerName;
+boolean doHideBattleDice=false;
 boolean isAIExecutingTurn;
 AI[] botPlayers;
 float timeWhenNextAIStep;
-
-String currPlayerName;
 // Time Variables
 float currTime; // in SECONDS.
 float timeScale = 1; // how fast currTime advances is scaled by this.
@@ -76,8 +75,9 @@ void draw() {
         setSelectedCountryIndex(-1);
       }
     }
-//    if (timeScale < 10) // HACK TEMP TEST!
+    if (!doHideBattleDice) {
     showBattleDice();
+    }
   }
 
   if (isAIExecutingTurn) {

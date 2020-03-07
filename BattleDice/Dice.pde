@@ -7,6 +7,7 @@ void setupBattle(Country offense, Country defense) {
   attackDice = new int[offense.myDice];
   defendDice = new int[defense.myDice];
   isBattleMode = true;
+  rollBattleDice();
 }
 
 int d6() {

@@ -4,6 +4,9 @@ void keyPressed() {
   if (key == 'r') {
     startNewGame();
   }
+  else if (key == 'd') {
+    doHideBattleDice = !doHideBattleDice;
+  }
   else if (key == 'a') {
     if (botPlayers[currPlayerIndex] == null) {
       botPlayers[currPlayerIndex] = new AI(currPlayerIndex);
