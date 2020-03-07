@@ -18,8 +18,12 @@ int numOfPlayers = 4;
 int currPlayerIndex;
 boolean isAIExecutingTurn;
 boolean[] eliminated;
-int timeWhenNextAIStep;
+float timeWhenNextAIStep; // in SECONDS.
 String currPlayerName;
+// Time Variables
+float currTime; // in SECONDS.
+float timeScale = 1; // how fast currTime advances is scaled by this.
+int pmillis; // previous millis.
 
 int turnCount;
 int selectedCountryIndex;
@@ -27,7 +31,7 @@ int selectedCountryIndex;
 boolean isBattleMode = false;
 Country attackingCountry, defendingCountry;
 int attackSum, defendSum;
-int startedRolling;
+float timeWhenStartedRolling;
 
 
 // ======== SETUP ========
@@ -43,17 +47,23 @@ void setup() {
 
 // ======== DRAW ========
 void draw() {
-  background(240);
-
+  background(110);
+  
+  // Update timeElapsed.
+  currTime += (millis()-pmillis) * 0.001 * timeScale;
+  pmillis = millis();
+  
+  
+  // DRAW!
   drawGridCells();
 
   // ---- BATTLE MODE ----
   if (isBattleMode) {
-    int beenRollingFor = millis() - startedRolling;
-    if (beenRollingFor < 1000) {
+    float beenRollingFor = currTime - timeWhenStartedRolling;
+    if (beenRollingFor < 1) {
       rollBattleDice();
     }
-    else if (beenRollingFor > 3000) {
+    else if (beenRollingFor > 2.5) {
       isBattleMode = false;
       if (attackSum > defendSum) {
         moveIntoCountry(attackingCountry, defendingCountry);
@@ -63,11 +73,12 @@ void draw() {
         setSelectedCountryIndex(-1);
       }
     }
+//    if (timeScale < 10) // HACK TEMP TEST!
     showBattleDice();
   }
-  
+
   if (isAIExecutingTurn) {
-    if (millis() > timeWhenNextAIStep) {
+    if (currTime > timeWhenNextAIStep) {
       AIExecuteNextStep();
     }
   }
@@ -80,11 +91,15 @@ void drawGridCells() {
   translate(gridPos.x, gridPos.y);
 
   for (int i=0; i<countries.length; i++) {
-    if (i==selectedCountryIndex) { continue; } // skip the raised-up country.
+    if (i==selectedCountryIndex) { 
+      continue;
+    } // skip the raised-up country.
     countries[i].drawMyCellsShadow();
   }
   for (int i=0; i<countries.length; i++) {
-    if (i==selectedCountryIndex) { continue; } // skip the raised-up country.
+    if (i==selectedCountryIndex) { 
+      continue;
+    } // skip the raised-up country.
     countries[i].drawMyCellsFill();
     countries[i].drawBorders();
   }
@@ -134,12 +149,25 @@ void drawHexLine(Vector2Int gridPos, int face) {
   pushMatrix();
   translate(getScreenX(gridPos.x, gridPos.y), getScreenY(gridPos.y));
   switch (face) {
-    case 0: line(0, -tileRadius, tileRadius*hexRatio, -tileRadius*0.5); break;
-    case 1: line( tileRadius*hexRatio, -tileRadius*0.5, tileRadius*hexRatio, tileRadius*0.5); break;
-    case 2: line(tileRadius*hexRatio, tileRadius*0.5, 0, tileRadius); break;
-    case 3: line(0, tileRadius, -tileRadius*hexRatio, tileRadius*0.5); break;
-    case 4: line(-tileRadius*hexRatio, tileRadius*0.5, -tileRadius*hexRatio, -tileRadius*0.5); break;
-    case 5: line(-tileRadius*hexRatio, -tileRadius*0.5, 0, -tileRadius); break;
+  case 0: 
+    line(0, -tileRadius, tileRadius*hexRatio, -tileRadius*0.5); 
+    break;
+  case 1: 
+    line( tileRadius*hexRatio, -tileRadius*0.5, tileRadius*hexRatio, tileRadius*0.5); 
+    break;
+  case 2: 
+    line(tileRadius*hexRatio, tileRadius*0.5, 0, tileRadius); 
+    break;
+  case 3: 
+    line(0, tileRadius, -tileRadius*hexRatio, tileRadius*0.5); 
+    break;
+  case 4: 
+    line(-tileRadius*hexRatio, tileRadius*0.5, -tileRadius*hexRatio, -tileRadius*0.5); 
+    break;
+  case 5: 
+    line(-tileRadius*hexRatio, -tileRadius*0.5, 0, -tileRadius); 
+    break;
   }
   popMatrix();
 }
+

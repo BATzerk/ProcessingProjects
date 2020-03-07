@@ -3,7 +3,7 @@ int[] attackDice, defendDice;
 void setupBattle(Country offense, Country defense) {
   attackingCountry = offense;
   defendingCountry = defense;
-  startedRolling = millis();
+  timeWhenStartedRolling = currTime;
   attackDice = new int[offense.myDice];
   defendDice = new int[defense.myDice];
   isBattleMode = true;

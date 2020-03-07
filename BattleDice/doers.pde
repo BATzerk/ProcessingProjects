@@ -175,13 +175,15 @@ void moveIntoCountry(Country from, Country to) {
   setSelectedCountryIndex(-1);
 
   // Is player eliminated?
-  for (int i = 0; i < countries.length; i++) {
-    if (countries[i].myTeamIndex == victimPlayerIndex) {
-      return;
+  if (victimPlayerIndex > -1) {
+    for (int i = 0; i < countries.length; i++) {
+      if (countries[i].myTeamIndex == victimPlayerIndex) {
+        return;
+      }
     }
+    println(getPlayerName(victimPlayerIndex) + " eliminiated.");
+    eliminated[victimPlayerIndex] = true;
   }
-  println(getPlayerName(victimPlayerIndex) + " eliminiated.");
-  eliminated[victimPlayerIndex] = true;
 }
 
 

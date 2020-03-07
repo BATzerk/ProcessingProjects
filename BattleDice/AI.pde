@@ -25,7 +25,7 @@ void AIExecuteNextStep() {
   }
   
   // Plan when to do next step. NOTE: FRAGILE! Timer runs concurrently with battle timer. IDEALLY, we'd only have ONE timer. It's "timeWhenNextStep", and when it's time, it'd call a function that handles what to do.
-  timeWhenNextAIStep = millis() + (isBattleMode ? 3500 : 500);
+  timeWhenNextAIStep = currTime + (isBattleMode ? 3.0 : 0.5);
 }
 
 Country[] getSelectableCountries() {

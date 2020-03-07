@@ -9,6 +9,9 @@ void keyPressed() {
       AIExecuteNextStep();
     }
   }
+  else if (key == 't') {
+    timeScale = timeScale>1 ? 1 : 1000;
+  }
   else if (keyCode == ENTER) {
     startNextPlayerTurn();
   }

@@ -113,7 +113,7 @@ class Country
       return baseColor;
     }
     else {
-      float highlightAlpha = sinRange(millis()*0.008, 0.4,1);//+ID
+      float highlightAlpha = sinRange(currTime*0.008, 0.4,1);//+ID
       color highlightColor = myTeamIndex>-1 ? color(teamHue(myTeamIndex),20,255) : color(255);
       return lerpColor(baseColor, highlightColor, highlightAlpha);
     }
