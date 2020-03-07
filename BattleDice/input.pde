@@ -22,7 +22,7 @@ void mousePressed() {
   if (selectedCountryIndex == -1) { // If no country selected
     if (
       country.myTeamIndex == currPlayerIndex && // players can only select THEIR countries
-      country.myDice > 1                           // can't attack with only 1 die
+      country.myDice > 1                        // can't attack with only 1 die
     ) {
       setSelectedCountryIndex(country.ID);
     }

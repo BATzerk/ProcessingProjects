@@ -20,9 +20,9 @@ Cell getRandomEmptyCell() {
   return ret;
 }
 
-Cell getPlayableCellByScreenPos(float x, float y) {  
-  int mouseRow = round((y - gridPos.y) / (tileRadius * 3/2));  
-  float xOffset = mouseRow % 2 == 0 
+Cell getPlayableCellByScreenPos(float x, float y) {
+  int mouseRow = round((y - gridPos.y) / (tileRadius * 3/2));
+  float xOffset = mouseRow % 2 == 0
     ? xOffset = tileRadius*hexRatio
     : 0;
   int mouseCol = round((x - gridPos.x - xOffset) / (tileRadius * 2 * hexRatio));
@@ -44,33 +44,33 @@ public Vector2Int getOffsetFromFace(int row, int face) {
   if (row % 2 == 0) {
     // Even rows
     switch (face) {
-    case 0: 
+    case 0:
       return new Vector2Int(1, -1);
-    case 1: 
+    case 1:
       return new Vector2Int(1, 0);
-    case 2: 
+    case 2:
       return new Vector2Int(1, 1);
-    case 3: 
+    case 3:
       return new Vector2Int(0, 1);
-    case 4: 
+    case 4:
       return new Vector2Int(-1, 0);
-    case 5: 
+    case 5:
       return new Vector2Int(0, -1);
     }
   }
   // Odd rows
   switch (face) {
-  case 0: 
+  case 0:
     return new Vector2Int(0, -1);
-  case 1: 
+  case 1:
     return new Vector2Int(1, 0);
-  case 2: 
+  case 2:
     return new Vector2Int(0, 1);
-  case 3: 
+  case 3:
     return new Vector2Int(-1, 1);
-  case 4: 
+  case 4:
     return new Vector2Int(-1, 0);
-  case 5: 
+  case 5:
     return new Vector2Int(-1, -1);
   }
   throw new Error("BAD FACE");
@@ -81,12 +81,12 @@ boolean isCurrentGridLayoutGood() {
   for (int i=0; i<countries.length; i++) {
     if (countries[i].cells.size() < MIN_CELLS_PER_COUNTRY) { return false; }
   }
-  
+
   // Are all the countries NOT on the same island? Return false.
   if (countries.length > countries[0].countCountriesOnIsland()) {
     return false;
   }
-  
+
   // Looks good!
   return true;
 }
@@ -100,17 +100,20 @@ String getPlayerName(int playerIndex) {
     default: return "UNDEFINED";
   }
 }
+color teamColor(int index, int alpha) {
+  return color(teamHue(index), 122, 255, alpha);
+}
 color teamColor(int index) {
-  return color(teamHue(index), 122, 255);
+  return teamColor(index, 255);
 }
 float teamHue(int index) {
   return index * 255/numOfPlayers;
 }
 
-
-
-
-
-
-
-
+color lerpColorHSB(color a, color b, float perc) {
+  float h = lerp(hue(a), hue(b), perc);
+  float s = lerp(saturation(a), saturation(b), perc);
+  float b = lerp(brightness(a), brightness(b), perc);
+  float a = lerp(alpha(a), alpha(b), perc);
+  return color(h, s, b, a);
+}
