@@ -10,6 +10,7 @@ void startNewGame() {
     isBattleMode = false;
     attackingCountry = null;
     defendingCountry = null;
+    eliminated = new int[numOfPlayers]; // assuming this fills false
   }
   // ---- Remake Grid to Good Layout ----
   {
@@ -85,6 +86,9 @@ void growCountryStep() {
 
 // ======== TAKING TURNS ========
 void setCurrPlayerIndex(int index) {
+  while (eliminated[index]) {
+    index = (index + 1) % numOfPlayers;
+  }
   currPlayerIndex = index;
   currPlayerName = getPlayerName(currPlayerIndex);
   setSelectedCountryIndex(-1);

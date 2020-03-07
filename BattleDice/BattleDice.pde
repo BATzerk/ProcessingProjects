@@ -16,8 +16,10 @@ Country[] countries=new Country[0];
 // Game Loop
 int numOfPlayers = 4;
 int currPlayerIndex;
-int turnCount;
+boolean[] eliminated;
 String currPlayerName;
+
+int turnCount;
 int selectedCountryIndex;
 
 boolean isBattleMode = false;
