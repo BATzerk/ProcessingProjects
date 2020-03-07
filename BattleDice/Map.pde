@@ -76,6 +76,32 @@ class Country
     return ids.size();
   }
 
+  void findNeighborsInGroup(Set ids, Set checked) {
+    checked.add(this.ID);
+    ids.add(this.ID);
+    for (int i = 0; i < this.neighbors.length; i++) {
+      if (this.neighbors[i].myTeamIndex != this.myTeamIndex) {
+        continue;
+      }
+      ids.add(this.neighbors[i].ID);
+      if (!checked.contains(this.neighbors[i].ID)) {
+        this.neighbors[i].findNeighborsInGroup(ids, checked);
+      }
+    }
+  }
+
+  int[] getMyCountryGroup() {
+    Set<Integer> ids = new HashSet<Integer>();
+    Set<Integer> checked = new HashSet<Integer>();
+    this.findNeighborsInGroup(ids, checked);
+    int[] ret = new int[ids.size()];
+    int i = 0;
+    for (int id: ids) {
+      ret[i++] = id;
+    }
+    return ret;
+  }
+
   color myColor() {
     boolean isInDanger =
       selectedCountryIndex > -1
@@ -133,4 +159,19 @@ class Country
     }
     popMatrix();
   }
+}
+
+ArrayList<int[]> getCountryGroups() {
+  Set<Integer> counted = new HashSet<Integer>();
+  ArrayList<int[]> groupList = new ArrayList<int[]>();
+  for (int i = 0; i < countries.length; i++) {
+    if (!counted.contains(i)) {
+      int[] group = countries[i].getMyCountryGroup();
+      for (int j = 0; j < group.length; j++) {
+        counted.add(group[j]);
+      }
+      groupList.add(group);
+    }
+  }
+  return groupList;
 }
