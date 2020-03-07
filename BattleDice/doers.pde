@@ -4,13 +4,13 @@
 void startNewGame() {
   // ---- Reset Gameplay Variables ----
   {
+    eliminated = new boolean[numOfPlayers]; // assuming this fills false
     setCurrPlayerIndex(0);
     turnCount = 1;
     setSelectedCountryIndex(-1);
     isBattleMode = false;
     attackingCountry = null;
     defendingCountry = null;
-    eliminated = new int[numOfPlayers]; // assuming this fills false
   }
   // ---- Remake Grid to Good Layout ----
   {
@@ -128,6 +128,7 @@ void endTurn() {
 }
 
 void moveIntoCountry(Country from, Country to) {
+  int victimPlayerIndex = to.myTeamIndex;
   to.myTeamIndex = currPlayerIndex;
   int targetCapacity = to.cells.size();
   int diceToGive = from.myDice - 1;
@@ -137,4 +138,13 @@ void moveIntoCountry(Country from, Country to) {
   to.myDice = diceToGive;
   from.myDice -= diceToGive;
   setSelectedCountryIndex(-1);
+
+  // Is player eliminated?
+  for (int i = 0; i < countries.length; i++) {
+    if (countries[i].myTeamIndex == victimPlayerIndex) {
+      return;
+    }
+  }
+  println(getPlayerName(victimPlayerIndex) + " eliminiated.");
+  eliminated[victimPlayerIndex] = true;
 }
