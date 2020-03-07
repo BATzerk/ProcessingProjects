@@ -80,19 +80,29 @@ boolean isCurrentGridLayoutGood() {
     if (countries[i].cells.size() < MIN_CELLS_PER_COUNTRY) { return false; }
   }
   
-  // Are all the countries on the same island?
+  // Are all the countries NOT on the same island? Return false.
   if (countries.length > countries[0].countCountriesOnIsland()) {
     return false;
   }
-  
-  if (getNumIslandsInGrid() > 1) { return false; }
   
   // Looks good!
   return true;
 }
 
-int getNumIslandsInGrid() {
-  return 0; // TODO: This!
+String getPlayerName(int playerIndex) {
+  switch (playerIndex) {
+    case 0: return "RED";
+    case 1: return "GREEN";
+    case 2: return "BLUE";
+    case 3: return "INDIGO";
+    default: return "UNDEFINED";
+  }
+}
+color teamColor(int index) {
+  return color(teamHue(index), 122, 255);
+}
+float teamHue(int index) {
+  return index * 255/numOfPlayers;
 }
 
 

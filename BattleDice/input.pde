@@ -1,36 +1,14 @@
-void endTurn() {
-  currentPlayerIndex = (currentPlayerIndex + 1) % numOfPlayers;
-  if (turnCount >= numOfPlayers) {
-    for (int i = 0; i < countries.length; i++) {
-      if (countries[i].myTeamIndex != currentPlayerIndex) {
-        continue;
-      }
-      countries[i].myDice += 1;
-      // TODO: Overflow full countries
-    }
-  }
-  turnCount ++;
-}
+
 
 void keyPressed() {
   if (key == ' ') {
-    remakeGridToGoodLayout();
-  } else if (keyCode == ENTER) {
+    startNewGame();
+  }
+  else if (keyCode == ENTER) {
     endTurn();
   }
 }
 
-void moveIntoCountry(Country from, Country to) {
-  to.myTeamIndex = currentPlayerIndex;
-  int targetCapacity = to.cells.size();
-  int diceToGive = from.myDice - 1;
-  if (targetCapacity < diceToGive) {
-    diceToGive = targetCapacity;
-  }
-  to.myDice = diceToGive;
-  from.myDice -= diceToGive;
-  selectedCountryIndex = -1;
-}
 
 void mousePressed() {
   Cell cellMouse = getPlayableCellByScreenPos(mouseX, mouseY);
@@ -43,7 +21,7 @@ void mousePressed() {
 
   if (selectedCountryIndex == -1) {
     if (
-      country.myTeamIndex == currentPlayerIndex &&
+      country.myTeamIndex == currPlayerIndex &&
       country.myDice > 1
     ) {
       selectedCountryIndex = country.ID;
@@ -51,7 +29,7 @@ void mousePressed() {
   } else {
     Country selectedCountry = countries[selectedCountryIndex];
     // Switch country
-    if (country.myTeamIndex == currentPlayerIndex) {
+    if (country.myTeamIndex == currPlayerIndex) {
       selectedCountryIndex = country.ID;
       return;
     }

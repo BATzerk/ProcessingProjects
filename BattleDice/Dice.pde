@@ -6,7 +6,7 @@ void setupBattle(Country offense, Country defense) {
   startedRolling = millis();
   attackDice = new int[offense.myDice];
   defendDice = new int[defense.myDice];
-  rollingDice = true;
+  isBattleMode = true;
 }
 
 int d6() {

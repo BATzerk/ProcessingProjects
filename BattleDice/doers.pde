@@ -1,23 +1,33 @@
 
 
-
-
-void remakeGridToGoodLayout() {
-  int i=0;
-  for (i=0; i<=50; i++) { // try a bunch of times.
-    remakeGridTotallyRandomly();
-    if (isCurrentGridLayoutGood()) { break; }
-    if (i>=20) {
-      println("Error! Could not find good layout. Oh well, going with this one.");
+// ======== GRID SETUP ========
+void startNewGame() {
+  // ---- Reset Gameplay Variables ----
+  {
+    setCurrPlayerIndex(0);
+    turnCount = 1;
+    selectedCountryIndex = -1;
+    isBattleMode = false;
+    attackingCountry = null;
+    defendingCountry = null;
+  }
+  // ---- Remake Grid to Good Layout ----
+  {
+    int i=0;
+    for (i=0; i<=50; i++) { // try a bunch of times.
+      remakeGridTotallyRandomly();
+      if (isCurrentGridLayoutGood()) { break; }
+      if (i>=20) {
+        println("Error! Could not find good layout. Oh well, going with this one.");
+      }
+    }
+  
+    // Assign starting countries
+    for (i = 0; i < numOfPlayers; i++) {
+      countries[i].myTeamIndex = i;
+      countries[i].myDice = NUM_STARTING_DICE_PER_TEAM;
     }
   }
-
-  // Assign starting countries
-  for (i = 0; i < numOfPlayers; i++) {
-    countries[i].myTeamIndex = i;
-    countries[i].myDice = 6;
-  }
-//  println("Tried times: " + i);
 }
 
 void remakeGridTotallyRandomly() {
@@ -71,3 +81,48 @@ void growCountryStep() {
     }
   }
 }
+
+
+// ======== TAKING TURNS ========
+void setCurrPlayerIndex(int index) {
+  currPlayerIndex = index;
+  currPlayerName = getPlayerName(currPlayerIndex);
+  selectedCountryIndex = -1;
+  isBattleMode = false;
+}
+void endTurn() {
+  // Set currPlayerIndex
+  setCurrPlayerIndex((currPlayerIndex + 1) % numOfPlayers);
+  currPlayerName = getPlayerName(currPlayerIndex);
+  // 
+  if (turnCount >= numOfPlayers) {
+    for (int i = 0; i < countries.length; i++) {
+      if (countries[i].myTeamIndex != currPlayerIndex) {
+        continue;
+      }
+      countries[i].myDice += 1;
+      // TODO: Overflow full countries
+    }
+  }
+  turnCount ++;
+}
+
+void moveIntoCountry(Country from, Country to) {
+  to.myTeamIndex = currPlayerIndex;
+  int targetCapacity = to.cells.size();
+  int diceToGive = from.myDice - 1;
+  if (targetCapacity < diceToGive) {
+    diceToGive = targetCapacity;
+  }
+  to.myDice = diceToGive;
+  from.myDice -= diceToGive;
+  selectedCountryIndex = -1;
+}
+
+
+
+
+
+
+
+
