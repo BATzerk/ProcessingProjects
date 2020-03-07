@@ -9,6 +9,7 @@ void startNewGame() {
     turnCount = 1;
     setSelectedCountryIndex(-1);
     isBattleMode = false;
+    isAIExecutingTurn = false;
     attackingCountry = null;
     defendingCountry = null;
   }
@@ -117,6 +118,7 @@ void setCurrPlayerIndex(int index) {
   currPlayerName = getPlayerName(currPlayerIndex);
   setSelectedCountryIndex(-1);
   isBattleMode = false;
+  isAIExecutingTurn = false;
 }
 void setSelectedCountryIndex(int index) {
   selectedCountryIndex = index;
@@ -126,7 +128,7 @@ void setSelectedCountryIndex(int index) {
     countries[i].displayOffsetY = isSelectedCountry ? -6 : 0;
   }
 }
-void endTurn() {
+void startNextPlayerTurn() {
   // Set currPlayerIndex
   setCurrPlayerIndex((currPlayerIndex + 1) % numOfPlayers);
   currPlayerName = getPlayerName(currPlayerIndex);
@@ -151,6 +153,15 @@ void endTurn() {
   turnCount ++;
 }
 
+void countryAttackOther(Country attacker, Country defender) {
+  if (defender.myTeamIndex == -1) { // take empty countries
+    moveIntoCountry(attacker, defender);
+  }
+  else { // fight occupied countries
+    setupBattle(attacker, defender);
+  }
+}
+
 void moveIntoCountry(Country from, Country to) {
   int victimPlayerIndex = to.myTeamIndex;
   to.myTeamIndex = currPlayerIndex;
@@ -172,3 +183,12 @@ void moveIntoCountry(Country from, Country to) {
   println(getPlayerName(victimPlayerIndex) + " eliminiated.");
   eliminated[victimPlayerIndex] = true;
 }
+
+
+
+
+
+
+
+
+

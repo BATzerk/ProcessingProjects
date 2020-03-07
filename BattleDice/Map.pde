@@ -138,11 +138,13 @@ class Country
     // Dice
     pushMatrix();
     translate(0, displayOffsetY);
-    fill(80);
+    fill(250);
+    stroke(60);
+    strokeWeight(1);
     for (int i=0; i<cells.size (); i++) {
       Cell cell = (Cell) cells.get(i);
       if (i < myDice) {
-        drawHexagon(cell.screenPos, tileRadius * 0.6);
+        drawHexagon(cell.screenPos, tileRadius * 0.65);
       }
     }
     popMatrix();

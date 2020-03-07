@@ -16,7 +16,9 @@ Country[] countries=new Country[0];
 // Game Loop
 int numOfPlayers = 4;
 int currPlayerIndex;
+boolean isAIExecutingTurn;
 boolean[] eliminated;
+int timeWhenNextAIStep;
 String currPlayerName;
 
 int turnCount;
@@ -45,6 +47,7 @@ void draw() {
 
   drawGridCells();
 
+  // ---- BATTLE MODE ----
   if (isBattleMode) {
     int beenRollingFor = millis() - startedRolling;
     if (beenRollingFor < 1000) {
@@ -57,10 +60,16 @@ void draw() {
       }
       else {
         attackingCountry.myDice = 1; // BONK!
-        selectedCountryIndex = -1;
+        setSelectedCountryIndex(-1);
       }
     }
     showBattleDice();
+  }
+  
+  if (isAIExecutingTurn) {
+    if (millis() > timeWhenNextAIStep) {
+      AIExecuteNextStep();
+    }
   }
 
   drawCurrentPlayerHeader();
