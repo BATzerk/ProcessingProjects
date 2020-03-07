@@ -5,8 +5,12 @@ void keyPressed() {
     startNewGame();
   }
   else if (key == 'a') {
-    if (!isAIExecutingTurn) {
-      AIExecuteNextStep();
+    if (botPlayers[currPlayerIndex] == null) {
+      botPlayers[currPlayerIndex] = new AI(currPlayerIndex);
+      botPlayers[currPlayerIndex].executeNextStep();
+    } else {
+      isAIExecutingTurn = false;
+      botPlayers[currPlayerIndex] = null;
     }
   }
   else if (keyCode == ENTER) {
@@ -47,8 +51,3 @@ void mousePressed() {
     countryAttackOther(selectedCountry, country);
   }
 }
-
-
-
-
-
