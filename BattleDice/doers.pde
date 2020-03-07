@@ -4,8 +4,9 @@
 void startNewGame() {
   // ---- Reset Gameplay Variables ----
   {
-    eliminated = new boolean[numOfPlayers]; // assuming this fills false
-    botPlayers = new AI[numOfPlayers]; // assuming this fills false
+    isGameOver = false;
+    eliminated = new boolean[NUM_PLAYERS]; // assuming this fills false
+    botPlayers = new AI[NUM_PLAYERS]; // assuming this fills false
     setCurrPlayerIndex(0);
     turnCount = 1;
     setSelectedCountryIndex(-1);
@@ -24,7 +25,7 @@ void startNewGame() {
       // Assign starting countries
       Set<Integer> invalid = new HashSet<Integer>(); // save taken and neighbors
       int assigned = 0;
-      for (int i = 0; assigned < numOfPlayers && i < countries.length; i++) {
+      for (int i = 0; (MOVIE_MODE || assigned < NUM_PLAYERS) && i < countries.length; i++) {
         if (invalid.contains(i)) { // can't choose an existing neighbor
           continue;
         }
@@ -37,13 +38,16 @@ void startNewGame() {
         }
       }
 
-      if (assigned < numOfPlayers) {
+      if (MOVIE_MODE) {
+        NUM_PLAYERS = assigned;
+      }
+      if (assigned < NUM_PLAYERS) {
         println("= Could only assign " + assigned + " players.");
         continue;
       }
 
       // Moved so we see the error if we give up
-      boolean currentGridLayoutIsGood = assigned == numOfPlayers && isCurrentGridLayoutGood();
+      boolean currentGridLayoutIsGood = assigned == NUM_PLAYERS && isCurrentGridLayoutGood();
 
       if (tries >= 50) {
         println("= Error! Could not find good layout. Oh well, going with this one.");
@@ -55,12 +59,24 @@ void startNewGame() {
       }
     }
   }
+  
+  // === MOVIE MODE === //
+  if (MOVIE_MODE) {
+    doHideBattleDice = true;
+    timeScale = 1000;
+    eliminated = new boolean[NUM_PLAYERS]; // assuming this fills false
+    botPlayers = new AI[NUM_PLAYERS]; // assuming this fills false
+    for (int i = 0; i < NUM_PLAYERS; i++) {
+      botPlayers[i] = new AI(i);
+    }
+  }
+  botPlayers[0].executeNextStep();
 }
 
 void remakeGridTotallyRandomly() {
-  int cols = 30;
-  int rows = 22;
-  float gw = cols * tileRadius * 2/3 * sqrt(6);
+  int cols = GRID_WIDTH;
+  int rows = GRID_HEIGHT;
+  float gw = cols * tileRadius * 1.678;
   float gh = rows * tileRadius * 1.4;
 
   // Cells
@@ -113,7 +129,7 @@ void growCountryStep() {
 // ======== TAKING TURNS ========
 void setCurrPlayerIndex(int index) {
   while (eliminated[index]) {
-    index = (index + 1) % numOfPlayers;
+    index = (index + 1) % NUM_PLAYERS;
   }
   currPlayerIndex = index;
   currPlayerName = getPlayerName(currPlayerIndex);
@@ -131,14 +147,14 @@ void setSelectedCountryIndex(int index) {
 }
 void startNextPlayerTurn() {
   // Set currPlayerIndex
-  setCurrPlayerIndex((currPlayerIndex + 1) % numOfPlayers);
+  setCurrPlayerIndex((currPlayerIndex + 1) % NUM_PLAYERS);
   currPlayerName = getPlayerName(currPlayerIndex);
 
   // === Distribute dice === //
-  if (turnCount >= numOfPlayers) { // don't give out dice on the first round
+  if (turnCount >= NUM_PLAYERS) { // don't give out dice on the first round
     ArrayList<int[]> groups = getCountryGroups(currPlayerIndex);
     for (int[] group: groups) { // for each group
-      int bank = group.length;
+      int bank = group.length; // Rubberbanding, min 3 per group max(3, group.length);
       int index = 0;
       int limit = 100; // in case we're all full
       while (limit-- > 0 && bank > 0) {
@@ -154,7 +170,7 @@ void startNextPlayerTurn() {
   turnCount ++;
 
   // Run AI
-  if (botPlayers[currPlayerIndex] != null) {
+  if (!isGameOver && botPlayers[currPlayerIndex] != null) {
     botPlayers[currPlayerIndex].executeNextStep();
   }
 }
@@ -189,5 +205,21 @@ void moveIntoCountry(Country from, Country to) {
     }
     println(getPlayerName(victimPlayerIndex) + " eliminiated.");
     eliminated[victimPlayerIndex] = true;
+    
+    int playersRemaining = 0;
+    for (int b = 0; b < eliminated.length; b++) {
+      if (!eliminated[b]) {
+        playersRemaining++;
+      }
+    }
+    if (playersRemaining == 1) {
+      isGameOver = true;
+      for (int i = 0; i < countries.length; i++) {
+        countries[i].myDice = countries[i].cells.size();
+      }
+      if (MOVIE_MODE) {
+        timeWhenStartNextGame = currTime + 3 * timeScale;
+      }
+    }
   }
 }

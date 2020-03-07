@@ -123,5 +123,5 @@ color teamColor(int index) {
   return teamColor(index, 255);
 }
 float teamHue(int index) {
-  return index * 255/numOfPlayers;
+  return index * 255/NUM_PLAYERS;
 }

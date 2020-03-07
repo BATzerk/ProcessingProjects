@@ -2,19 +2,26 @@
 // by Chris Hallberg and Brett Taylor
 // Based on the game "Battle Dice" from 20 Games to Play with Your Mates
 
-// Grid Properties
+// Constants
+final boolean MOVIE_MODE = true;
+int NUM_PLAYERS = 10;
 final int NUM_FACES = 6; // it's hip to be hex.
 final int NUM_STARTING_DICE_PER_TEAM = 6;
 final int MIN_CELLS_PER_COUNTRY = 6;
 final int MAX_CELLS_PER_COUNTRY = 14;
-float tileRadius = 14;
+final int DICE_SIDES = 6;
+final int GRID_WIDTH = 58;
+final int GRID_HEIGHT = 46;
+
+// Grid Properties
+float tileRadius = 10;
 float hexRatio = 0.8457;
 PVector gridPos; // the TOP-left corner of the grid.
 Cell[][] gridCells;
 Country[] countries=new Country[0];
 
 // Game Loop
-int numOfPlayers = 4;
+boolean isGameOver = false;
 int currPlayerIndex;
 boolean[] eliminated;
 String currPlayerName;
@@ -34,12 +41,13 @@ boolean isBattleMode = false;
 Country attackingCountry, defendingCountry;
 int attackSum, defendSum;
 float timeWhenStartedRolling;
+float timeWhenStartNextGame;
 
 
 // ======== SETUP ========
 void setup() {
   colorMode(HSB);
-  size(800, 600);
+  size(1024, 768);
   textAlign(CENTER, CENTER);
   // textFont(loadFont("AdobeDevanagari-Bold-48.vlw"));
 
@@ -49,12 +57,15 @@ void setup() {
 
 // ======== DRAW ========
 void draw() {
-  background(110);
+  background(102);
   
   // Update timeElapsed.
   currTime += (millis()-pmillis) * 0.001 * timeScale;
   pmillis = millis();
   
+  if (MOVIE_MODE && isGameOver && currTime > timeWhenStartNextGame) {
+    startNewGame();
+  }
   
   // DRAW!
   drawGridCells();
@@ -76,7 +87,7 @@ void draw() {
       }
     }
     if (!doHideBattleDice) {
-    showBattleDice();
+      showBattleDice();
     }
   }
 
@@ -86,7 +97,9 @@ void draw() {
     }
   }
 
-  drawCurrentPlayerHeader();
+  if (!MOVIE_MODE) {
+    drawCurrentPlayerHeader();
+  }
 }
 
 void drawGridCells() {

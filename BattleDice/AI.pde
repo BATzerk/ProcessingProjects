@@ -15,7 +15,8 @@ class AI
 
     boolean didDoAnAttack = false;
     for (int i=0; i<selectableCountries.length; i++) {
-      setSelectedCountryIndex(selectableCountries[i].ID);
+      int chosenCountry = (i + turnCount) % selectableCountries.length;
+      setSelectedCountryIndex(selectableCountries[chosenCountry].ID);
       // Pick a random country to attack.
       Country[] attackableCountries = getAttackableCountriesWithAttackAdvantage();
       // We have countries to attack! Do attack!
@@ -27,7 +28,7 @@ class AI
         break;
       }
     }
-    if (!didDoAnAttack) {
+    if (!didDoAnAttack || isGameOver) {
       startNextPlayerTurn();
       return;
     }

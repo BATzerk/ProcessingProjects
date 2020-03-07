@@ -11,7 +11,7 @@ void setupBattle(Country offense, Country defense) {
 }
 
 int d6() {
-  return floor(random(5)) + 1;
+  return floor(random(DICE_SIDES)) + 1;
 }
 
 void rollBattleDice() {
