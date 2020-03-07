@@ -4,8 +4,13 @@ void keyPressed() {
   if (key == ' ') {
     startNewGame();
   }
+  else if (key == 'a') {
+    if (!isAIExecutingTurn) {
+      AIExecuteNextStep();
+    }
+  }
   else if (keyCode == ENTER) {
-    endTurn();
+    startNextPlayerTurn();
   }
 }
 
@@ -39,10 +44,11 @@ void mousePressed() {
       setSelectedCountryIndex(-1);
       return;
     }
-    if (country.myTeamIndex == -1) { // take empty countries
-      moveIntoCountry(selectedCountry, country);
-    } else { // fight occupied countries
-      setupBattle(selectedCountry, country);
-    }
+    countryAttackOther(selectedCountry, country);
   }
 }
+
+
+
+
+
