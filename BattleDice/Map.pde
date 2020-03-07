@@ -84,8 +84,8 @@ class Country
 
     if (myTeamIndex > -1) {
       return isInDanger
-        ? color(myTeamIndex * 255/numOfPlayers, 70, 255)
-        : color(myTeamIndex * 255/numOfPlayers, 122, 255);
+        ? color(teamHue(myTeamIndex), 70, 255)
+        : teamColor(myTeamIndex);
     }
      return isInDanger ? color(255) : color(32, 34, 234);
   }

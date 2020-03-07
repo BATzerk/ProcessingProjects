@@ -13,8 +13,14 @@ Country[] countries;
 // Game Loop
 int numOfPlayers = 4;
 int currentPlayerIndex = 0;
+int turnCount = 1;
 
 int selectedCountryIndex = -1;
+
+boolean rollingDice = false;
+Country attackingCountry, defendingCountry;
+int attackSum, defendSum;
+int startedRolling;
 
 // ======== SETUP ========
 void setup() {
@@ -33,11 +39,26 @@ void draw() {
 
   drawGridCells();
 
+  if (rollingDice) {
+    int beenRollingFor = millis() - startedRolling;
+    if (beenRollingFor < 500) {
+      rollBattleDice();
+    } else if (beenRollingFor > 3000) {
+      rollingDice = false;
+      if (attackSum > defendSum) {
+        moveIntoCountry(attackingCountry, defendingCountry);
+      } else {
+        attackingCountry.myDice = 1; // BONK!
+      }
+    }
+    showBattleDice();
+  }
+
   noStroke();
-  fill(currentPlayerIndex * 255/numOfPlayers, 122, 255);
+  fill(teamColor(currentPlayerIndex));
   rect(0, 0, width, 40);
-  fill(255);
-  textSize(48);
+  fill(0);
+  textSize(36);
   text("PLAYER: " + currentPlayerIndex, width/2, 20);
 }
 
@@ -83,6 +104,13 @@ void drawGridCells() {
 
 
   popMatrix();
+}
+
+color teamColor(int index) {
+  return color(teamHue(index), 122, 255);
+}
+float teamHue(int index) {
+  return index * 255/numOfPlayers;
 }
 
 void drawHexagon(PVector pos) {
@@ -133,12 +161,4 @@ void drawHexLine(Vector2Int gridPos, int face) {
     break;
   }
   popMatrix();
-}
-
-
-void keyPressed() {
-  if (key == ' ') {
-    remakeGridToGoodLayout();
-  }
-  println(key);
 }
