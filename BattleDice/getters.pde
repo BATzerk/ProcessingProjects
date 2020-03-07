@@ -111,7 +111,7 @@ float teamHue(int index) {
 color lerpColorHSB(color a, color b, float perc) {
   float h = lerp(hue(a), hue(b), perc);
   float s = lerp(saturation(a), saturation(b), perc);
-  float b = lerp(brightnes(a), brightnes(b), perc);
+  float b = lerp(brightness(a), brightness(b), perc);
   float a = lerp(alpha(a), alpha(b), perc);
   return color(h, s, b, a);
 }
