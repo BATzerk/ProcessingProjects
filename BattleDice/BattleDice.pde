@@ -2,6 +2,14 @@
 // by Chris Hallberg and Brett Taylor
 // Based on the game "Battle Dice" from 20 Games to Play with Your Mates
 
+/**
+ * TODO
+ * - Always reject impossible geometry (islands)
+ * - Smarter AI
+ * - Save country images and tint
+ * - Refactor loop to handle higher/more granular speeds
+ */
+
 // Constants
 final boolean MOVIE_MODE = true;
 int NUM_PLAYERS = 10;
