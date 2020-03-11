@@ -77,7 +77,7 @@ void remakeGridTotallyRandomly() {
   int cols = GRID_WIDTH;
   int rows = GRID_HEIGHT;
   float gw = cols * tileRadius * 1.678;
-  float gh = rows * tileRadius * 1.4;
+  float gh = rows * tileRadius * 1.44;
 
   // Cells
   gridCells = new Cell[cols][rows];
