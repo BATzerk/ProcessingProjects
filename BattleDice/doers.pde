@@ -38,6 +38,13 @@ void startNewGame() {
         }
       }
 
+      // Moved so we see the error if we give up
+      Quality currentGridLayoutIsGood = isCurrentGridLayoutGood();
+
+      if (currentGridLayoutIsGood == Quality.IMPOSSIBLE) {
+        continue;
+      }
+
       if (MOVIE_MODE) {
         NUM_PLAYERS = assigned;
       }
@@ -46,20 +53,17 @@ void startNewGame() {
         continue;
       }
 
-      // Moved so we see the error if we give up
-      boolean currentGridLayoutIsGood = assigned == NUM_PLAYERS && isCurrentGridLayoutGood();
-
-      if (tries >= 50) {
+      if (currentGridLayoutIsGood == Quality.BAD && tries >= 50) {
         println("= Error! Could not find good layout. Oh well, going with this one.");
         break;
       }
 
-      if (currentGridLayoutIsGood) {
+      if (currentGridLayoutIsGood == Quality.GOOD) {
         break;
       }
     }
   }
-  
+
   // === MOVIE MODE === //
   if (MOVIE_MODE) {
     doHideBattleDice = true;
@@ -205,7 +209,7 @@ void moveIntoCountry(Country from, Country to) {
     }
     println(getPlayerName(victimPlayerIndex) + " eliminiated.");
     eliminated[victimPlayerIndex] = true;
-    
+
     int playersRemaining = 0;
     for (int b = 0; b < eliminated.length; b++) {
       if (!eliminated[b]) {

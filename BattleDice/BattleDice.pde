@@ -4,7 +4,6 @@
 
 /**
  * TODO
- * - Always reject impossible geometry (islands)
  * - Smarter AI
  * - Save country images and tint
  * - Refactor loop to handle higher/more granular speeds
