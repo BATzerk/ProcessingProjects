@@ -20,7 +20,10 @@ void keyPressed() {
     }
   }
   else if (key == 't') {
-    timeScale = timeScale>1 ? 1 : 1000;
+    timeScale = timeScale>1 ? NORMAL_TIME_SCALE : 1000;
+  }
+  else if (key == 'f' || key == 'F') {
+    timeScale = timeScale>1 ? NORMAL_TIME_SCALE : FAST_FORWARD_TIME_SCALE;
   }
   else if (keyCode == ENTER && !isBattleMode && !isGameOver && isCurrentPlayerHuman()) {
     startNextPlayerTurn();
@@ -30,6 +33,11 @@ void keyPressed() {
 
 void mousePressed() {
   if (!isCurrentPlayerHuman() || isBattleMode || isGameOver) {
+    return;
+  }
+
+  if (isMouseOverEndTurnButton()) {
+    startNextPlayerTurn();
     return;
   }
 

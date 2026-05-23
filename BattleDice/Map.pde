@@ -5,6 +5,9 @@ import java.util.Set;
 final int BORDER_NORMAL = 0;
 final int BORDER_ATTACKABLE = 1;
 final int BORDER_HOVERED_ATTACK = 2;
+final float COUNTRY_SHUDDER_DURATION = 0.45;
+final float COUNTRY_SHUDDER_AMOUNT = 5;
+final float COUNTRY_CAPTURE_HIGHLIGHT_DURATION = 1.0;
 
 class Country
 {
@@ -13,12 +16,43 @@ class Country
   LinkedList<Cell> cells;
   Country[] neighbors;
   int ID;
-  float displayOffsetY; // for raising up the selected country.
+  float displayOffsetY; // for raising up selected and battling countries.
+  float shudderStartTime = -COUNTRY_SHUDDER_DURATION;
+  float captureHighlightStartTime = -COUNTRY_CAPTURE_HIGHLIGHT_DURATION;
 
   Country(int index, Cell startingCell) {
     this.ID = index;
     this.cells = new LinkedList<Cell>();
     this.addCell(startingCell);
+  }
+
+  void startShudder() {
+    shudderStartTime = currTime;
+  }
+
+  void startCaptureHighlight() {
+    captureHighlightStartTime = currTime;
+  }
+
+  float shudderProgress() {
+    return constrain((currTime - shudderStartTime) / COUNTRY_SHUDDER_DURATION, 0, 1);
+  }
+
+  float shudderStrength() {
+    return (1 - shudderProgress()) * COUNTRY_SHUDDER_AMOUNT;
+  }
+
+  float shudderOffsetX() {
+    return sin(currTime * 72) * shudderStrength();
+  }
+
+  float shudderOffsetY() {
+    return cos(currTime * 91) * shudderStrength() * 0.65;
+  }
+
+  float captureHighlightAlpha() {
+    float progress = constrain((currTime - captureHighlightStartTime) / COUNTRY_CAPTURE_HIGHLIGHT_DURATION, 0, 1);
+    return (1 - easeInOut(progress)) * 185;
   }
 
   void addCell(Cell c) {
@@ -108,7 +142,10 @@ class Country
 
   color myColor() {
     boolean isInDanger =
-      selectedCountryIndex > -1
+      isCurrentPlayerHuman()
+      && !isBattleMode
+      && !isGameOver
+      && selectedCountryIndex > -1
       && countries[selectedCountryIndex].myTeamIndex != this.myTeamIndex
       && isNeighboring(selectedCountryIndex);
 
@@ -116,16 +153,15 @@ class Country
     if (!isInDanger) {
       return baseColor;
     } else {
-      float highlightAlpha = sinRange(currTime*0.008, 0.4, 1);//+ID
+      float highlightAlpha = sinRange(currTime*0.008, 0.2, 0.5);//+ID
       color highlightColor = myTeamIndex>-1 ? color(teamHue(myTeamIndex), 90, 255) : color(255);
       return lerpColor(baseColor, highlightColor, highlightAlpha);
     }
   }
 
   void drawMyCellsShapes() {
-    float displayOffsetY = selectedCountryIndex==ID ? -8 : 0;
     pushMatrix();
-    translate(0, displayOffsetY);
+    translate(shudderOffsetX(), displayOffsetY + shudderOffsetY());
     for (int i=0; i<cells.size (); i++) {
       Cell cell = (Cell) cells.get(i);
       drawHexagon(cell.screenPos);
@@ -141,10 +177,15 @@ class Country
       fill(255, 80);
       drawMyCellsShapes();
     }
+    float captureAlpha = captureHighlightAlpha();
+    if (captureAlpha > 0) {
+      fill(255, captureAlpha);
+      drawMyCellsShapes();
+    }
 
     // Dice
     pushMatrix();
-    translate(0, displayOffsetY);
+    translate(shudderOffsetX(), displayOffsetY + shudderOffsetY());
     fill(250);
     stroke(60);
     strokeWeight(1);
@@ -165,7 +206,10 @@ class Country
     popMatrix();
   }
   boolean isAttackableFromSelection() {
-    return selectedCountryIndex > -1
+    return isCurrentPlayerHuman()
+      && !isBattleMode
+      && !isGameOver
+      && selectedCountryIndex > -1
       && canAttackCountry(countries[selectedCountryIndex], this);
   }
 
@@ -187,7 +231,7 @@ class Country
 
   void drawBorders(int borderMode) {
     pushMatrix();
-    translate(0, displayOffsetY);
+    translate(shudderOffsetX(), displayOffsetY + shudderOffsetY());
     color baseBorderColor = color(80);
     for (int i=0; i<cells.size (); i++) {
       Cell thisCell = (Cell) cells.get(i);
@@ -206,7 +250,7 @@ class Country
               + thisCell.screenPos.y * 0.0099
               + face * 0.0,
               0, 1);
-            color highlightBorderColorA = color(110);//color(teamHue(currPlayerIndex), 80, 255);
+            color highlightBorderColorA = color(170);//color(teamHue(currPlayerIndex), 80, 255);
             color highlightBorderColorB = color(250);//color(teamHue(currPlayerIndex), 200, 255);
             stroke(lerpColor(highlightBorderColorA, highlightBorderColorB, wave));
             strokeWeight(3);

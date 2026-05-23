@@ -15,7 +15,7 @@ void startNewGame() {
     attackingCountry = null;
     defendingCountry = null;
     statusText = "";
-    timeScale = 1;
+    timeScale = NORMAL_TIME_SCALE;
     doHideBattleDice = false;
   }
   // ---- Remake Grid to Good Layout ----
@@ -161,10 +161,31 @@ void startAITurnIfNeeded() {
 }
 void setSelectedCountryIndex(int index) {
   selectedCountryIndex = index;
-  // Tell all countries what's up.
+}
+
+boolean isCountryInCurrentBattle(int countryIndex) {
+  return isBattleMode
+    && (
+      (attackingCountry != null && attackingCountry.ID == countryIndex)
+      || (defendingCountry != null && defendingCountry.ID == countryIndex)
+    );
+}
+
+boolean isCountryRaisedForDrawing(int countryIndex) {
+  return countryIndex == selectedCountryIndex || isCountryInCurrentBattle(countryIndex);
+}
+
+void updateCountryDisplayOffsets() {
   for (int i=0; i<countries.length; i++) {
-    boolean isSelectedCountry = i == selectedCountryIndex;
-    countries[i].displayOffsetY = isSelectedCountry ? -6 : 0;
+    float targetOffsetY = 0;
+    if (isCountryInCurrentBattle(i)) {
+      targetOffsetY = BATTLE_COUNTRY_RAISE;
+    }
+    else if (i == selectedCountryIndex) {
+      targetOffsetY = SELECTED_COUNTRY_RAISE
+        + sin(currTime * SELECTED_COUNTRY_BOB_SPEED) * SELECTED_COUNTRY_BOB_AMOUNT;
+    }
+    countries[i].displayOffsetY = targetOffsetY;
   }
 }
 void startNextPlayerTurn() {

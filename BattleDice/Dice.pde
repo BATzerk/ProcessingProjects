@@ -4,8 +4,21 @@ final float BATTLE_GATHER_DURATION = 0.4;
 final float BATTLE_PAIR_DELAY = 0.25;
 final float BATTLE_PAIR_DURATION = 0.14;
 final float BATTLE_WIN_FLASH_DURATION = 1.4;
+final float BATTLE_BASH_WIND_DURATION = 0.35;
+final float BATTLE_BASH_SLAM_DURATION = 0.16;
+final float BATTLE_BASH_RECOIL_DURATION = 0.12;
+final float BATTLE_BASH_VANISH_DURATION = 0.32;
+final float BATTLE_BASH_WIND_DISTANCE = 34;
+final float BATTLE_BASH_IMPACT_OVERLAP = 14;
+final float BATTLE_BASH_LOSER_KNOCKBACK = 25;
+final float BATTLE_BASH_VANISH_SPEED = 92;
+final float BATTLE_BASH_VANISH_SPEED_RANDOM = 48;
+final float BATTLE_BASH_VANISH_DRIFT_RANDOM = 46;
 final float BATTLE_DIE_RADIUS = 20;
 final float BATTLE_CENTER_COLUMN_OFFSET = 44;
+final float BATTLE_SCORE_Y = 116;
+final float BATTLE_SCORE_RECT_PAD_X = 22;
+final float BATTLE_SCORE_RECT_PAD_Y = 8;
 BattleDie[] attackBattleDice, defendBattleDice;
 float battleResolutionTime;
 
@@ -17,6 +30,8 @@ void setupBattle(Country offense, Country defense) {
 
   attackingCountry = offense;
   defendingCountry = defense;
+  isBattleMode = true;
+  updateCountryDisplayOffsets();
   timeWhenStartedRolling = currTime;
   attackDice = new int[offense.myDice];
   defendDice = new int[defense.myDice];
@@ -26,7 +41,6 @@ void setupBattle(Country offense, Country defense) {
     + max(attackDice.length, defendDice.length) * BATTLE_PAIR_DELAY
     + BATTLE_PAIR_DURATION
     + BATTLE_WIN_FLASH_DURATION;
-  isBattleMode = true;
   attackSum = 0;
   defendSum = 0;
 }
@@ -87,6 +101,14 @@ boolean isBattleFlashTime(float elapsed) {
   return elapsed >= battleResolutionTime - BATTLE_WIN_FLASH_DURATION;
 }
 
+float battleBashStartTime() {
+  return battleResolutionTime - BATTLE_WIN_FLASH_DURATION;
+}
+
+float battleBashImpactTime() {
+  return battleBashStartTime() + BATTLE_BASH_WIND_DURATION + BATTLE_BASH_SLAM_DURATION;
+}
+
 void updateBattleDiceValues(float elapsed) {
   attackSum = updateBattleDiceValues(attackBattleDice, attackDice, elapsed);
   defendSum = updateBattleDiceValues(defendBattleDice, defendDice, elapsed);
@@ -111,9 +133,11 @@ void finishBattle() {
   isBattleMode = false;
   if (attackSum > defendSum) {
     moveIntoCountry(attackingCountry, defendingCountry);
+    defendingCountry.startCaptureHighlight();
   }
   else {
     attackingCountry.myDice = 1; // BONK!
+    attackingCountry.startShudder();
     if (isCurrentPlayerHuman()) {
       statusText = "Attack failed. That country is down to 1 die. Attack again, or press ENTER.";
     }
@@ -137,13 +161,20 @@ void showBattleDice() {
   rect(0, 0, width, height);
 
   drawBattleScores(isFlashingWinner, winningTeamIndex, flash);
-  drawBattleDiceColumn(attackBattleDice, elapsed);
-  drawBattleDiceColumn(defendBattleDice, elapsed);
+  boolean attackerWins = attackSum > defendSum;
+  if (attackerWins) {
+    drawBattleDiceColumn(defendBattleDice, elapsed, false, true, false, false);
+    drawBattleDiceColumn(attackBattleDice, elapsed, true, false, true, false);
+  }
+  else {
+    drawBattleDiceColumn(attackBattleDice, elapsed, true, true, false, true);
+    drawBattleDiceColumn(defendBattleDice, elapsed, false, false, false, false);
+  }
 }
 
 void drawBattleScores(boolean isFlashingWinner, int winningTeamIndex, float flash) {
-  drawBattleScore(attackSum, width / 2 - BATTLE_CENTER_COLUMN_OFFSET, 78, attackingCountry.myTeamIndex, isFlashingWinner && winningTeamIndex == attackingCountry.myTeamIndex, flash, RIGHT);
-  drawBattleScore(defendSum, width / 2 + BATTLE_CENTER_COLUMN_OFFSET, 78, defendingCountry.myTeamIndex, isFlashingWinner && winningTeamIndex == defendingCountry.myTeamIndex, flash, LEFT);
+  drawBattleScore(attackSum, width / 2 - BATTLE_CENTER_COLUMN_OFFSET, BATTLE_SCORE_Y, attackingCountry.myTeamIndex, isFlashingWinner && winningTeamIndex == attackingCountry.myTeamIndex, flash, RIGHT);
+  drawBattleScore(defendSum, width / 2 + BATTLE_CENTER_COLUMN_OFFSET, BATTLE_SCORE_Y, defendingCountry.myTeamIndex, isFlashingWinner && winningTeamIndex == defendingCountry.myTeamIndex, flash, LEFT);
 }
 
 void drawBattleScore(int score, float x, float y, int teamIndex, boolean isWinner, float flash, int horizontalAlign) {
@@ -161,7 +192,9 @@ void drawBattleScore(int score, float x, float y, int teamIndex, boolean isWinne
   if (isWinner) {
     noStroke();
     fill(teamColor(teamIndex, 120));
-    ellipse(textCenterX, y, 130, 82);
+    rectMode(CENTER);
+    rect(textCenterX, y, textWidth(scoreText) + BATTLE_SCORE_RECT_PAD_X * 2, textAscent() + textDescent() + BATTLE_SCORE_RECT_PAD_Y * 2);
+    rectMode(CORNER);
   }
   fill(0, 170);
   text(scoreText, x + 2, y + 3);
@@ -170,7 +203,9 @@ void drawBattleScore(int score, float x, float y, int teamIndex, boolean isWinne
   textAlign(CENTER, CENTER);
 }
 
-void drawBattleDiceColumn(BattleDie[] dice, float elapsed) {
+void drawBattleDiceColumn(BattleDie[] dice, float elapsed, boolean isAttacker, boolean isLoser, boolean isRightSide, boolean loserKeepsOneDie) {
+  float bashOffsetX = getBattleBashOffset(elapsed, isAttacker, isLoser, isRightSide);
+  int survivorIndex = dice.length / 2;
   for (int i = 0; i < dice.length; i++) {
     BattleDie die = dice[i];
     float pairStart = battlePairStartTime(i);
@@ -184,22 +219,96 @@ void drawBattleDiceColumn(BattleDie[] dice, float elapsed) {
     else {
       pos = PVector.lerp(die.sidePos, die.centerPos, easeInOut((elapsed - pairStart) / BATTLE_PAIR_DURATION));
     }
+    pos.x += bashOffsetX;
+
+    boolean isSurvivor = loserKeepsOneDie && i == survivorIndex;
+    float alpha = getBattleDieAlpha(elapsed, isLoser, isSurvivor);
+    if (alpha <= 0) {
+      continue;
+    }
+    float vanish = getBattleDieVanish(elapsed, isLoser, isSurvivor);
+    if (vanish > 0) {
+      pos.add(PVector.mult(die.vanishVelocity, vanish * BATTLE_BASH_VANISH_DURATION));
+    }
+    float radius = BATTLE_DIE_RADIUS * (1 + vanish * 0.45);
     int faceValue = die.isLocked ? die.lockedValue : floor(random(DICE_SIDES)) + 1;
-    drawDieFace(pos.x, pos.y, BATTLE_DIE_RADIUS, faceValue, teamColor(die.teamIndex));
+    drawDieFace(pos.x, pos.y, radius, faceValue, teamColor(die.teamIndex), alpha);
   }
 }
 
+float getBattleBashOffset(float elapsed, boolean isAttacker, boolean isLoser, boolean isRightSide) {
+  float bashElapsed = elapsed - battleBashStartTime();
+  if (bashElapsed <= 0) {
+    return 0;
+  }
+
+  if (isAttacker) {
+    float slamDirection = 1;
+    float windOffset = -slamDirection * BATTLE_BASH_WIND_DISTANCE;
+    float impactOffset = slamDirection * (BATTLE_CENTER_COLUMN_OFFSET * 2 + BATTLE_BASH_IMPACT_OVERLAP);
+    float settleOffset = 0;
+
+    if (bashElapsed < BATTLE_BASH_WIND_DURATION) {
+      return lerp(0, windOffset, easeInOut(bashElapsed / BATTLE_BASH_WIND_DURATION));
+    }
+    bashElapsed -= BATTLE_BASH_WIND_DURATION;
+
+    if (bashElapsed < BATTLE_BASH_SLAM_DURATION) {
+      float t = bashElapsed / BATTLE_BASH_SLAM_DURATION;
+      return lerp(windOffset, impactOffset, t * t);
+    }
+    bashElapsed -= BATTLE_BASH_SLAM_DURATION;
+
+    if (bashElapsed < BATTLE_BASH_RECOIL_DURATION) {
+      return lerp(impactOffset, settleOffset, easeInOut(bashElapsed / BATTLE_BASH_RECOIL_DURATION));
+    }
+    return settleOffset;
+  }
+
+  if (!isLoser) {
+    return 0;
+  }
+
+  float loserDirection = isRightSide ? 1 : -1;
+  float impactElapsed = elapsed - battleBashImpactTime();
+  if (impactElapsed <= 0 || impactElapsed > BATTLE_BASH_RECOIL_DURATION + BATTLE_BASH_VANISH_DURATION) {
+    return 0;
+  }
+  float t = impactElapsed / (BATTLE_BASH_RECOIL_DURATION + BATTLE_BASH_VANISH_DURATION);
+  return loserDirection * sin(t * PI) * BATTLE_BASH_LOSER_KNOCKBACK;
+}
+
+float getBattleDieAlpha(float elapsed, boolean isLoser, boolean isSurvivor) {
+  if (!isLoser || isSurvivor || elapsed < battleBashImpactTime()) {
+    return 255;
+  }
+  float t = constrain((elapsed - battleBashImpactTime()) / BATTLE_BASH_VANISH_DURATION, 0, 1);
+  return lerp(255, 0, easeInOut(t));
+}
+
+float getBattleDieVanish(float elapsed, boolean isLoser, boolean isSurvivor) {
+  if (!isLoser || isSurvivor || elapsed < battleBashImpactTime()) {
+    return 0;
+  }
+  return easeInOut((elapsed - battleBashImpactTime()) / BATTLE_BASH_VANISH_DURATION);
+}
+
 void drawDieFace(float x, float y, float radius, int value, color dieColor) {
+  drawDieFace(x, y, radius, value, dieColor, 255);
+}
+
+void drawDieFace(float x, float y, float radius, int value, color dieColor, float alphaValue) {
   pushStyle();
-  color faceColor = lerpColor(color(0, 0, 255), dieColor, 0.22);
+  color visibleDieColor = color(hue(dieColor), saturation(dieColor), brightness(dieColor), alphaValue);
+  color faceColor = lerpColor(color(0, 0, 255, alphaValue), visibleDieColor, 0.22);
   fill(faceColor);
-  stroke(dieColor);
+  stroke(visibleDieColor);
   strokeWeight(2);
   rectMode(CENTER);
   rect(x, y, radius * 2, radius * 2);
 
   noStroke();
-  fill(0, 0, 35, 220);
+  fill(0, 0, 35, min(220, alphaValue));
   float pipOffset = radius * 0.6;
   float pipSize = radius * 0.48;
   if (value == 1 || value == 3 || value == 5) {
@@ -228,11 +337,18 @@ class BattleDie
   int teamIndex;
   int lockedValue = 0;
   boolean isLocked = false;
+  PVector vanishVelocity;
 
   BattleDie(PVector startPos, PVector sidePos, PVector centerPos, int teamIndex) {
     this.startPos = startPos;
     this.sidePos = sidePos;
     this.centerPos = centerPos;
     this.teamIndex = teamIndex;
+    float bashDirection = centerPos.x < width / 2 ? -1 : 1;
+    float speed = BATTLE_BASH_VANISH_SPEED + random(BATTLE_BASH_VANISH_SPEED_RANDOM);
+    this.vanishVelocity = new PVector(
+      bashDirection * speed,
+      random(-BATTLE_BASH_VANISH_DRIFT_RANDOM, BATTLE_BASH_VANISH_DRIFT_RANDOM)
+    );
   }
 }

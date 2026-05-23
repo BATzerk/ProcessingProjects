@@ -20,6 +20,18 @@ final int MAX_CELLS_PER_COUNTRY = 14;
 final int DICE_SIDES = 6;
 final int GRID_WIDTH = 24;
 final int GRID_HEIGHT = 18;
+final float NORMAL_TIME_SCALE = 1;
+final float FAST_FORWARD_TIME_SCALE = 6;
+final float SELECTED_COUNTRY_RAISE = -7;
+final float BATTLE_COUNTRY_RAISE = -7;
+final float SELECTED_COUNTRY_BOB_AMOUNT = 0.6;
+final float SELECTED_COUNTRY_BOB_SPEED = 4;
+final float PLAYER_BANNER_HEIGHT = 42;
+final float ACTIVE_PLAYER_BANNER_HEIGHT = 64;
+final float END_TURN_BUTTON_WIDTH = 134;
+final float END_TURN_BUTTON_HEIGHT = 42;
+final float END_TURN_BUTTON_MARGIN = 16;
+final float END_TURN_BUTTON_RADIUS = 6;
 
 // Grid Properties
 float tileRadius = 22;
@@ -40,7 +52,7 @@ float timeWhenNextAIStep;
 String statusText = "";
 // Time Variables
 float currTime; // in SECONDS.
-float timeScale = 1; // how fast currTime advances is scaled by this.
+float timeScale = NORMAL_TIME_SCALE; // how fast currTime advances is scaled by this.
 int pmillis; // previous millis.
 
 int turnCount;
@@ -101,30 +113,33 @@ void draw() {
 
   if (!MOVIE_MODE) {
     drawCurrentPlayerHeader();
+    drawEndTurnButton();
   }
 }
 
 void drawGridCells() {
+  updateCountryDisplayOffsets();
+
   pushMatrix();
   translate(gridPos.x, gridPos.y);
 
   for (int i=0; i<countries.length; i++) {
-    if (i==selectedCountryIndex) {
+    if (isCountryRaisedForDrawing(i)) {
       continue;
-    } // skip the raised-up country.
+    } // skip raised-up countries.
     countries[i].drawMyCellsShadow();
   }
   for (int i=0; i<countries.length; i++) {
-    if (i==selectedCountryIndex) {
+    if (isCountryRaisedForDrawing(i)) {
       continue;
-    } // skip the raised-up country.
+    } // skip raised-up countries.
     countries[i].drawMyCellsFill();
   }
 
   for (int i=0; i<countries.length; i++) {
-    if (i==selectedCountryIndex) {
+    if (isCountryRaisedForDrawing(i)) {
       continue;
-    } // draw the raised-up country after everything else.
+    } // draw raised-up countries after everything else.
     countries[i].drawNormalBorders();
   }
 
@@ -136,11 +151,13 @@ void drawGridCells() {
     countries[i].drawHoveredAttackBorder();
   }
 
-  // Draw raised-up country last so it visually sits above the map.
-  if (selectedCountryIndex >= 0) {
-    countries[selectedCountryIndex].drawMyCellsShadow();
-    countries[selectedCountryIndex].drawMyCellsFill();
-    countries[selectedCountryIndex].drawNormalBorders();
+  // Draw raised-up countries last so they visually sit above the map.
+  for (int i=0; i<countries.length; i++) {
+    if (isCountryRaisedForDrawing(i)) {
+      countries[i].drawMyCellsShadow();
+      countries[i].drawMyCellsFill();
+      countries[i].drawNormalBorders();
+    }
   }
 
   popMatrix();
@@ -148,18 +165,35 @@ void drawGridCells() {
 
 void drawCurrentPlayerHeader() {
   noStroke();
-  fill(teamColor(currPlayerIndex));
-  rect(0, 0, width, 40);
-  fill(0);
-  textSize(36);
-  text(currPlayerName + "'s Turn", width/2, 20);
+  float bannerWidth = width / (float) NUM_PLAYERS;
+  for (int i = 0; i < NUM_PLAYERS; i++) {
+    boolean isActive = i == currPlayerIndex;
+    float x = i * bannerWidth;
+    float bannerHeight = isActive ? ACTIVE_PLAYER_BANNER_HEIGHT : PLAYER_BANNER_HEIGHT;
+    color bannerColor = isActive
+      ? teamColor(i)
+      : color(teamHue(i), eliminated[i] ? 24 : 96, eliminated[i] ? 74 : 132);
+
+    fill(bannerColor);
+    rect(x, 0, bannerWidth + 1, bannerHeight);
+    fill(0, isActive ? 55 : 85);
+    rect(x, bannerHeight - 6, bannerWidth + 1, 6);
+    fill(0, 70);
+    rect(x + bannerWidth - 1, 0, 1, bannerHeight);
+
+    fill(isActive ? 0 : 255);
+    textSize(isActive ? 24 : 16);
+    text(getPlayerName(i), x + bannerWidth/2, isActive ? 21 : 14);
+    textSize(isActive ? 34 : 18);
+    text(getPlayerDiceTotal(i) + " dice", x + bannerWidth/2, isActive ? 48 : 31);
+  }
 
   fill(0, 150);
   rect(0, height - 34, width, 34);
   fill(255);
   textSize(16);
   String helpText = isCurrentPlayerHuman()
-    ? "Click your lit country, click a neighboring enemy or empty country to attack. ENTER ends turn. R restarts."
+    ? "Click your lit country, click a neighboring enemy or empty country to attack. ENTER ends turn. F fast-forwards. R restarts."
     : currPlayerName + " is thinking...";
   if (isGameOver) {
     helpText = currPlayerName + " wins. Press R for a new game.";
@@ -167,6 +201,41 @@ void drawCurrentPlayerHeader() {
     helpText = statusText;
   }
   text(helpText, width/2, height - 17);
+}
+
+void drawEndTurnButton() {
+  if (!shouldShowEndTurnButton()) {
+    return;
+  }
+
+  boolean isHovered = isMouseOverEndTurnButton();
+  boolean noMoves = !currentPlayerHasAvailableMove();
+  float flash = noMoves ? sinRange(currTime * 8, 0, 1) : 0;
+  float x = getEndTurnButtonX();
+  float y = getEndTurnButtonY();
+
+  pushStyle();
+  rectMode(CORNER);
+  noStroke();
+  fill(0, 95);
+  rect(x + 3, y + 4, END_TURN_BUTTON_WIDTH, END_TURN_BUTTON_HEIGHT, END_TURN_BUTTON_RADIUS);
+
+  color baseColor = color(teamHue(currPlayerIndex), 118, isHovered ? 255 : 224);
+  color flashColor = color(42, 190, 255);
+  fill(noMoves ? lerpColor(baseColor, flashColor, flash) : baseColor);
+  rect(x, y, END_TURN_BUTTON_WIDTH, END_TURN_BUTTON_HEIGHT, END_TURN_BUTTON_RADIUS);
+
+  stroke(255, isHovered ? 230 : 130);
+  strokeWeight(isHovered ? 2.5 : 1.5);
+  noFill();
+  rect(x + 1, y + 1, END_TURN_BUTTON_WIDTH - 2, END_TURN_BUTTON_HEIGHT - 2, END_TURN_BUTTON_RADIUS);
+
+  fill(0, 165);
+  textSize(16);
+  text("END TURN", x + END_TURN_BUTTON_WIDTH / 2 + 1, y + END_TURN_BUTTON_HEIGHT / 2 + 2);
+  fill(255);
+  text("END TURN", x + END_TURN_BUTTON_WIDTH / 2, y + END_TURN_BUTTON_HEIGHT / 2);
+  popStyle();
 }
 
 void drawHexagon(PVector pos) {

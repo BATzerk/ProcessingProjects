@@ -63,12 +63,55 @@ boolean isCountryInteractable(Country country) {
 }
 
 boolean isCountryHovered(Country country) {
+  if (!isCurrentPlayerHuman() || isBattleMode || isGameOver) {
+    return false;
+  }
   Country hovered = getCountryByScreenPos(mouseX, mouseY);
   return hovered != null && hovered.ID == country.ID;
 }
 
 boolean isCountryHoveredAndInteractable(Country country) {
   return isCountryHovered(country) && isCountryInteractable(country);
+}
+
+boolean shouldShowEndTurnButton() {
+  return isCurrentPlayerHuman() && !isBattleMode && !isGameOver;
+}
+
+float getEndTurnButtonX() {
+  return width - END_TURN_BUTTON_WIDTH - END_TURN_BUTTON_MARGIN;
+}
+
+float getEndTurnButtonY() {
+  return height - END_TURN_BUTTON_HEIGHT - END_TURN_BUTTON_MARGIN - 34;
+}
+
+boolean isMouseOverEndTurnButton() {
+  if (!shouldShowEndTurnButton()) {
+    return false;
+  }
+
+  float x = getEndTurnButtonX();
+  float y = getEndTurnButtonY();
+  return mouseX >= x
+    && mouseX <= x + END_TURN_BUTTON_WIDTH
+    && mouseY >= y
+    && mouseY <= y + END_TURN_BUTTON_HEIGHT;
+}
+
+boolean currentPlayerHasAvailableMove() {
+  for (int i=0; i<countries.length; i++) {
+    Country attacker = countries[i];
+    if (!canSelectCountry(attacker)) {
+      continue;
+    }
+    for (int n=0; n<attacker.neighbors.length; n++) {
+      if (canAttackCountry(attacker, attacker.neighbors[n])) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 float getScreenX(float col, float row) {
@@ -156,6 +199,15 @@ String getPlayerName(int playerIndex) {
     case 3: return "INDIGO";
     default: return "PLAYER " + (playerIndex + 1);
   }
+}
+int getPlayerDiceTotal(int playerIndex) {
+  int total = 0;
+  for (int i = 0; i < countries.length; i++) {
+    if (countries[i].myTeamIndex == playerIndex) {
+      total += countries[i].myDice;
+    }
+  }
+  return total;
 }
 color teamColor(int index, int alpha) {
   return color(teamHue(index), 122, 255, alpha);
