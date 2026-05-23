@@ -10,48 +10,53 @@ void keyPressed() {
   else if (key == 'a') {
     if (botPlayers[currPlayerIndex] == null) {
       botPlayers[currPlayerIndex] = new AI(currPlayerIndex);
-      botPlayers[currPlayerIndex].executeNextStep();
+      if (!isBattleMode && !isGameOver) {
+        botPlayers[currPlayerIndex].executeNextStep();
+      }
     } else {
       isAIExecutingTurn = false;
       botPlayers[currPlayerIndex] = null;
+      statusText = getPlayerName(currPlayerIndex) + " is now human-controlled.";
     }
   }
   else if (key == 't') {
     timeScale = timeScale>1 ? 1 : 1000;
   }
-  else if (keyCode == ENTER) {
+  else if (keyCode == ENTER && !isBattleMode && !isGameOver && isCurrentPlayerHuman()) {
     startNextPlayerTurn();
   }
 }
 
 
 void mousePressed() {
+  if (!isCurrentPlayerHuman() || isBattleMode || isGameOver) {
+    return;
+  }
+
   Cell cellMouse = getPlayableCellByScreenPos(mouseX, mouseY);
   if (cellMouse == null) {
     setSelectedCountryIndex(-1);
+    statusText = "No country there. Click one of your countries with 2+ dice.";
     return;
   }
 
   Country country = cellMouse.myCountry;
 
   if (selectedCountryIndex == -1) { // If no country selected
-    if (
-      country.myTeamIndex == currPlayerIndex && // players can only select THEIR countries
-      country.myDice > 1                        // can't attack with only 1 die
-    ) {
+    if (canSelectCountry(country)) {
       setSelectedCountryIndex(country.ID);
+      statusText = "Selected. Click a neighboring enemy or empty country to attack.";
+    } else if (country.myTeamIndex == currPlayerIndex) {
+      statusText = "That country only has 1 die, so it cannot attack.";
+    } else {
+      statusText = "That is not your country. Click one of your own countries first.";
     }
   } else { // Clicking second country (already have selection)
     Country selectedCountry = countries[selectedCountryIndex];
 
-    if (country.myTeamIndex == currPlayerIndex) { // another of player's countries?
-      setSelectedCountryIndex(country.ID); // switch
-      return;
-    }
-
-    boolean isNeighbor = selectedCountry.isNeighboring(country);
-    if (!isNeighbor) { // clicking away to relo-- deselect
+    if (!canAttackCountry(selectedCountry, country)) {
       setSelectedCountryIndex(-1);
+      statusText = "Deselected. Click one of your countries with 2+ dice.";
       return;
     }
     countryAttackOther(selectedCountry, country);

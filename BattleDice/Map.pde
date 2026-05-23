@@ -2,6 +2,10 @@ import java.util.LinkedList;
 import java.util.HashSet;
 import java.util.Set;
 
+final int BORDER_NORMAL = 0;
+final int BORDER_ATTACKABLE = 1;
+final int BORDER_HOVERED_ATTACK = 2;
+
 class Country
 {
   int myTeamIndex = -1;
@@ -96,7 +100,7 @@ class Country
     this.findNeighborsInGroup(ids, checked);
     int[] ret = new int[ids.size()];
     int i = 0;
-    for (int id: ids) {
+    for (int id : ids) {
       ret[i++] = id;
     }
     return ret;
@@ -107,14 +111,13 @@ class Country
       selectedCountryIndex > -1
       && countries[selectedCountryIndex].myTeamIndex != this.myTeamIndex
       && isNeighboring(selectedCountryIndex);
-    
-    color baseColor = myTeamIndex > -1 ? teamColor(myTeamIndex) : color(32,34,234);
+
+    color baseColor = myTeamIndex > -1 ? teamColor(myTeamIndex) : color(32, 34, 234);
     if (!isInDanger) {
       return baseColor;
-    }
-    else {
-      float highlightAlpha = sinRange(currTime*0.008, 0.4,1);//+ID
-      color highlightColor = myTeamIndex>-1 ? color(teamHue(myTeamIndex),20,255) : color(255);
+    } else {
+      float highlightAlpha = sinRange(currTime*0.008, 0.4, 1);//+ID
+      color highlightColor = myTeamIndex>-1 ? color(teamHue(myTeamIndex), 90, 255) : color(255);
       return lerpColor(baseColor, highlightColor, highlightAlpha);
     }
   }
@@ -134,7 +137,11 @@ class Country
     fill(myColor());
     noStroke();
     drawMyCellsShapes();
-    
+    if (isCountryHoveredAndInteractable(this)) {
+      fill(255, 80);
+      drawMyCellsShapes();
+    }
+
     // Dice
     pushMatrix();
     translate(0, displayOffsetY);
@@ -157,17 +164,57 @@ class Country
     drawMyCellsShapes();
     popMatrix();
   }
-  void drawBorders() {
+  boolean isAttackableFromSelection() {
+    return selectedCountryIndex > -1
+      && canAttackCountry(countries[selectedCountryIndex], this);
+  }
+
+  void drawNormalBorders() {
+    drawBorders(BORDER_NORMAL);
+  }
+
+  void drawAttackableBorders() {
+    if (isAttackableFromSelection()) {
+      drawBorders(BORDER_ATTACKABLE);
+    }
+  }
+
+  void drawHoveredAttackBorder() {
+    if (isAttackableFromSelection() && isCountryHovered(this)) {
+      drawBorders(BORDER_HOVERED_ATTACK);
+    }
+  }
+
+  void drawBorders(int borderMode) {
     pushMatrix();
     translate(0, displayOffsetY);
-    stroke(80);
-    strokeWeight(3.5);
+    color baseBorderColor = color(80);
     for (int i=0; i<cells.size (); i++) {
       Cell thisCell = (Cell) cells.get(i);
       for (int face=0; face<NUM_FACES; face++) {
         Cell otherCell = thisCell.getNeighbor(face);
         boolean isBorder = otherCell==null || thisCell.myCountry!=otherCell.myCountry;
         if (isBorder) {
+          if (borderMode == BORDER_HOVERED_ATTACK) {
+            stroke(teamHue(currPlayerIndex), 160, 255);
+            strokeWeight(4.5);
+          }
+          else if (borderMode == BORDER_ATTACKABLE) {
+            float wave = sinRange(
+              currTime * 4
+              - thisCell.screenPos.x * 0.008
+              + thisCell.screenPos.y * 0.0099
+              + face * 0.0,
+              0, 1);
+            color highlightBorderColorA = color(110);//color(teamHue(currPlayerIndex), 80, 255);
+            color highlightBorderColorB = color(250);//color(teamHue(currPlayerIndex), 200, 255);
+            stroke(lerpColor(highlightBorderColorA, highlightBorderColorB, wave));
+            strokeWeight(3);
+          }
+          else {
+            stroke(baseBorderColor);
+            strokeWeight(2);
+          }
           drawHexLine(thisCell.gridPos, face);
         }
       }
@@ -183,7 +230,7 @@ ArrayList<int[]> getCountryGroups(int teamIndex) {
     if (
       countries[i].myTeamIndex == teamIndex && // make sure it's the right team
       !counted.contains(i)                     // make sure we haven't checked it yet
-    ) {
+      ) {
       int[] group = countries[i].getMyCountryGroup();
       for (int j = 0; j < group.length; j++) {
         counted.add(group[j]);

@@ -31,6 +31,46 @@ Cell getPlayableCellByScreenPos(float x, float y) {
   return cell;
 }
 
+Country getCountryByScreenPos(float x, float y) {
+  Cell cell = getPlayableCellByScreenPos(x, y);
+  return cell == null ? null : cell.myCountry;
+}
+
+boolean canSelectCountry(Country country) {
+  return country != null
+    && country.myTeamIndex == currPlayerIndex
+    && country.myDice > 1;
+}
+
+boolean canAttackCountry(Country attacker, Country defender) {
+  return attacker != null
+    && defender != null
+    && attacker.ID != defender.ID
+    && attacker.myDice > 1
+    && attacker.myTeamIndex == currPlayerIndex
+    && defender.myTeamIndex != currPlayerIndex
+    && attacker.isNeighboring(defender);
+}
+
+boolean isCountryInteractable(Country country) {
+  if (!isCurrentPlayerHuman() || isBattleMode || isGameOver || country == null) {
+    return false;
+  }
+  if (selectedCountryIndex == -1) {
+    return canSelectCountry(country);
+  }
+  return canAttackCountry(countries[selectedCountryIndex], country);
+}
+
+boolean isCountryHovered(Country country) {
+  Country hovered = getCountryByScreenPos(mouseX, mouseY);
+  return hovered != null && hovered.ID == country.ID;
+}
+
+boolean isCountryHoveredAndInteractable(Country country) {
+  return isCountryHovered(country) && isCountryInteractable(country);
+}
+
 float getScreenX(float col, float row) {
   float xOffset = 0;
   if (row%2==0) xOffset = tileRadius*hexRatio;
@@ -114,7 +154,7 @@ String getPlayerName(int playerIndex) {
     case 1: return "GREEN";
     case 2: return "BLUE";
     case 3: return "INDIGO";
-    default: return "UNDEFINED";
+    default: return "PLAYER " + (playerIndex + 1);
   }
 }
 color teamColor(int index, int alpha) {

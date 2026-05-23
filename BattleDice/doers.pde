@@ -14,6 +14,9 @@ void startNewGame() {
     isAIExecutingTurn = false;
     attackingCountry = null;
     defendingCountry = null;
+    statusText = "";
+    timeScale = 1;
+    doHideBattleDice = false;
   }
   // ---- Remake Grid to Good Layout ----
   {
@@ -73,8 +76,15 @@ void startNewGame() {
     for (int i = 0; i < NUM_PLAYERS; i++) {
       botPlayers[i] = new AI(i);
     }
+  } else {
+    for (int i = 0; i < NUM_PLAYERS; i++) {
+      if (i != HUMAN_PLAYER_INDEX) {
+        botPlayers[i] = new AI(i);
+      }
+    }
+    statusText = "You are " + getPlayerName(HUMAN_PLAYER_INDEX) + ". Click one of your countries with 2+ dice.";
   }
-  botPlayers[0].executeNextStep();
+  startAITurnIfNeeded();
 }
 
 void remakeGridTotallyRandomly() {
@@ -141,6 +151,14 @@ void setCurrPlayerIndex(int index) {
   isBattleMode = false;
   isAIExecutingTurn = false;
 }
+boolean isCurrentPlayerHuman() {
+  return !MOVIE_MODE && botPlayers[currPlayerIndex] == null;
+}
+void startAITurnIfNeeded() {
+  if (!isGameOver && botPlayers[currPlayerIndex] != null) {
+    botPlayers[currPlayerIndex].executeNextStep();
+  }
+}
 void setSelectedCountryIndex(int index) {
   selectedCountryIndex = index;
   // Tell all countries what's up.
@@ -172,11 +190,12 @@ void startNextPlayerTurn() {
     }
   }
   turnCount ++;
+  statusText = isCurrentPlayerHuman()
+    ? "Your turn. Click one of your countries with 2+ dice, or press ENTER to pass."
+    : "";
 
   // Run AI
-  if (!isGameOver && botPlayers[currPlayerIndex] != null) {
-    botPlayers[currPlayerIndex].executeNextStep();
-  }
+  startAITurnIfNeeded();
 }
 
 void countryAttackOther(Country attacker, Country defender) {
@@ -199,6 +218,9 @@ void moveIntoCountry(Country from, Country _to) {
   _to.myDice = diceToGive;
   from.myDice -= diceToGive;
   setSelectedCountryIndex(-1);
+  if (isCurrentPlayerHuman()) {
+    statusText = "Captured country. Attack again, or press ENTER to end your turn.";
+  }
 
   // Is player eliminated?
   if (victimPlayerIndex > -1) {
@@ -208,6 +230,7 @@ void moveIntoCountry(Country from, Country _to) {
       }
     }
     println(getPlayerName(victimPlayerIndex) + " eliminiated.");
+    statusText = getPlayerName(victimPlayerIndex) + " eliminated.";
     eliminated[victimPlayerIndex] = true;
 
     int playersRemaining = 0;
@@ -218,6 +241,7 @@ void moveIntoCountry(Country from, Country _to) {
     }
     if (playersRemaining == 1) {
       isGameOver = true;
+      statusText = currPlayerName + " wins. Press R for a new game.";
       for (int i = 0; i < countries.length; i++) {
         countries[i].myDice = countries[i].cells.size();
       }

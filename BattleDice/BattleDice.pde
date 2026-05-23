@@ -10,18 +10,19 @@
  */
 
 // Constants
-final boolean MOVIE_MODE = true;
-int NUM_PLAYERS = 10;
+final boolean MOVIE_MODE = false;
+int NUM_PLAYERS = 4;
+final int HUMAN_PLAYER_INDEX = 0;
 final int NUM_FACES = 6; // it's hip to be hex.
 final int NUM_STARTING_DICE_PER_TEAM = 6;
 final int MIN_CELLS_PER_COUNTRY = 6;
 final int MAX_CELLS_PER_COUNTRY = 14;
 final int DICE_SIDES = 6;
-final int GRID_WIDTH = 58;
-final int GRID_HEIGHT = 46;
+final int GRID_WIDTH = 24;
+final int GRID_HEIGHT = 18;
 
 // Grid Properties
-float tileRadius = 10;
+float tileRadius = 22;
 float hexRatio = 0.8457;
 PVector gridPos; // the TOP-left corner of the grid.
 Cell[][] gridCells;
@@ -36,6 +37,7 @@ boolean doHideBattleDice=false;
 boolean isAIExecutingTurn;
 AI[] botPlayers;
 float timeWhenNextAIStep;
+String statusText = "";
 // Time Variables
 float currTime; // in SECONDS.
 float timeScale = 1; // how fast currTime advances is scaled by this.
@@ -64,7 +66,7 @@ void setup() {
 
 // ======== DRAW ========
 void draw() {
-  background(102);
+  background(0x1F85DE);
   
   // Update timeElapsed.
   currTime += (millis()-pmillis) * 0.001 * timeScale;
@@ -80,25 +82,18 @@ void draw() {
   // ---- BATTLE MODE ----
   if (isBattleMode) {
     float beenRollingFor = currTime - timeWhenStartedRolling;
-    if (beenRollingFor < 1) {
-      rollBattleDice();
-    }
-    else if (beenRollingFor > 2.5) {
-      isBattleMode = false;
-      if (attackSum > defendSum) {
-        moveIntoCountry(attackingCountry, defendingCountry);
-      }
-      else {
-        attackingCountry.myDice = 1; // BONK!
-        setSelectedCountryIndex(-1);
-      }
-    }
     if (!doHideBattleDice) {
       showBattleDice();
     }
+    else {
+      updateBattleDiceValues(beenRollingFor);
+    }
+    if (beenRollingFor > battleResolutionTime) {
+      finishBattle();
+    }
   }
 
-  if (isAIExecutingTurn) {
+  if (!isBattleMode && isAIExecutingTurn && botPlayers[currPlayerIndex] != null) {
     if (currTime > timeWhenNextAIStep) {
       botPlayers[currPlayerIndex].executeNextStep();
     }
@@ -114,24 +109,38 @@ void drawGridCells() {
   translate(gridPos.x, gridPos.y);
 
   for (int i=0; i<countries.length; i++) {
-    if (i==selectedCountryIndex) { 
+    if (i==selectedCountryIndex) {
       continue;
     } // skip the raised-up country.
     countries[i].drawMyCellsShadow();
   }
   for (int i=0; i<countries.length; i++) {
-    if (i==selectedCountryIndex) { 
+    if (i==selectedCountryIndex) {
       continue;
     } // skip the raised-up country.
     countries[i].drawMyCellsFill();
-    countries[i].drawBorders();
   }
 
-  // Draw raised-up country.
+  for (int i=0; i<countries.length; i++) {
+    if (i==selectedCountryIndex) {
+      continue;
+    } // draw the raised-up country after everything else.
+    countries[i].drawNormalBorders();
+  }
+
+  // Draw attackable borders late so neighboring countries cannot stamp over them.
+  for (int i=0; i<countries.length; i++) {
+    countries[i].drawAttackableBorders();
+  }
+  for (int i=0; i<countries.length; i++) {
+    countries[i].drawHoveredAttackBorder();
+  }
+
+  // Draw raised-up country last so it visually sits above the map.
   if (selectedCountryIndex >= 0) {
     countries[selectedCountryIndex].drawMyCellsShadow();
     countries[selectedCountryIndex].drawMyCellsFill();
-    countries[selectedCountryIndex].drawBorders();
+    countries[selectedCountryIndex].drawNormalBorders();
   }
 
   popMatrix();
@@ -144,6 +153,20 @@ void drawCurrentPlayerHeader() {
   fill(0);
   textSize(36);
   text(currPlayerName + "'s Turn", width/2, 20);
+
+  fill(0, 150);
+  rect(0, height - 34, width, 34);
+  fill(255);
+  textSize(16);
+  String helpText = isCurrentPlayerHuman()
+    ? "Click your lit country, click a neighboring enemy or empty country to attack. ENTER ends turn. R restarts."
+    : currPlayerName + " is thinking...";
+  if (isGameOver) {
+    helpText = currPlayerName + " wins. Press R for a new game.";
+  } else if (statusText.length() > 0) {
+    helpText = statusText;
+  }
+  text(helpText, width/2, height - 17);
 }
 
 void drawHexagon(PVector pos) {
