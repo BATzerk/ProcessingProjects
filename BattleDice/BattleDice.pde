@@ -193,4 +193,3 @@ void drawHexLine(Vector2Int gridPos, int face) {
   }
   popMatrix();
 }
-

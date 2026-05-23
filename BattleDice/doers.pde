@@ -188,15 +188,15 @@ void countryAttackOther(Country attacker, Country defender) {
   }
 }
 
-void moveIntoCountry(Country from, Country to) {
-  int victimPlayerIndex = to.myTeamIndex;
-  to.myTeamIndex = currPlayerIndex;
-  int targetCapacity = to.cells.size();
+void moveIntoCountry(Country from, Country _to) {
+  int victimPlayerIndex = _to.myTeamIndex;
+  _to.myTeamIndex = currPlayerIndex;
+  int targetCapacity = _to.cells.size();
   int diceToGive = from.myDice - 1;
   if (targetCapacity < diceToGive) {
     diceToGive = targetCapacity;
   }
-  to.myDice = diceToGive;
+  _to.myDice = diceToGive;
   from.myDice -= diceToGive;
   setSelectedCountryIndex(-1);
 
