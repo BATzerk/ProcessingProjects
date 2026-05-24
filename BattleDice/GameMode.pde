@@ -2,6 +2,22 @@ void setGameMode(int mode) {
   gameMode = mode;
 }
 
+void returnToPlayerSelectScreen() {
+  clearScheduledAction();
+  setSelectedCountryIndex(-1);
+  attackingCountry = null;
+  defendingCountry = null;
+  migrationFromCountry = null;
+  migrationToCountry = null;
+  migrationDiceCount = 0;
+  migrationDieStartPositions = null;
+  migrationDieEndPositions = null;
+  timeScale = NORMAL_TIME_SCALE;
+  doHideBattleDice = false;
+  statusText = "";
+  setGameMode(GAME_MODE_PLAYER_SELECT);
+}
+
 void enterBattleMode() {
   setGameMode(GAME_MODE_BATTLE);
 }

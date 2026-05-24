@@ -33,7 +33,7 @@ void startNewGame() {
       // Assign starting countries
       Set<Integer> invalid = new HashSet<Integer>(); // save taken and nearby starts
       int assigned = 0;
-      for (int i = 0; (MOVIE_MODE || assigned < NUM_PLAYERS) && i < countries.length; i++) {
+      for (int i = 0; assigned < NUM_PLAYERS && i < countries.length; i++) {
         if (invalid.contains(i)) {
           continue;
         }
@@ -53,9 +53,6 @@ void startNewGame() {
         continue;
       }
 
-      if (MOVIE_MODE) {
-        NUM_PLAYERS = assigned;
-      }
       if (assigned < NUM_PLAYERS) {
         println("= Could only assign " + assigned + " players.");
         continue;
@@ -72,22 +69,12 @@ void startNewGame() {
     }
   }
 
-  // === MOVIE MODE === //
-  if (MOVIE_MODE) {
-    doHideBattleDice = true;
-    timeScale = 1000;
-    eliminated = new boolean[NUM_PLAYERS]; // assuming this fills false
-    resetPlayerLuckiness();
-    botPlayers = new AI[NUM_PLAYERS]; // assuming this fills false
-    for (int i = 0; i < NUM_PLAYERS; i++) {
+  for (int i = 0; i < NUM_PLAYERS; i++) {
+    if (!isPlayerHumanControlled(i)) {
       botPlayers[i] = createAIForTeam(i);
     }
-  } else {
-    for (int i = 0; i < NUM_PLAYERS; i++) {
-      if (!isPlayerHumanControlled(i)) {
-        botPlayers[i] = createAIForTeam(i);
-      }
-    }
+  }
+  if (setupHumanCount > 0) {
     statusText = "Click one of your countries with 2+ dice.";
   }
   startAITurnIfNeeded();
@@ -178,7 +165,7 @@ void setCurrPlayerIndex(int index) {
   setSelectedCountryIndex(-1);
 }
 boolean isCurrentPlayerHuman() {
-  return !MOVIE_MODE && botPlayers[currPlayerIndex] == null;
+  return botPlayers[currPlayerIndex] == null;
 }
 void startAITurnIfNeeded() {
   if (isGameOver()) {
@@ -371,9 +358,6 @@ void moveIntoCountry(Country from, Country _to) {
       statusText = currPlayerName + " wins. Press CTRL+R for a new game.";
       for (int i = 0; i < countries.length; i++) {
         countries[i].myDice = countries[i].cells.size();
-      }
-      if (MOVIE_MODE) {
-        scheduleAction(SCHEDULED_ACTION_MOVIE_RESTART, 3 * timeScale);
       }
     }
   }

@@ -181,7 +181,7 @@ int getSetupPlayerCount() {
 }
 
 boolean isPlayerHumanControlled(int playerIndex) {
-  return !MOVIE_MODE && playerIndex < setupHumanCount;
+  return playerIndex < setupHumanCount;
 }
 
 AI createAIForTeam(int teamIndex) {

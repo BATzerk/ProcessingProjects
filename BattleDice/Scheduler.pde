@@ -15,9 +15,6 @@ void runDueScheduledAction() {
   int action = scheduledAction;
   if (action == SCHEDULED_ACTION_AI_STEP) {
     runScheduledAIStep();
-  } else if (action == SCHEDULED_ACTION_MOVIE_RESTART) {
-    clearScheduledAction();
-    runScheduledMovieRestart();
   }
 }
 
@@ -27,11 +24,5 @@ void runScheduledAIStep() {
     botPlayers[currPlayerIndex].executeNextStep();
   } else if (!isBattleMode() && !isMigrationMode()) {
     clearScheduledAction();
-  }
-}
-
-void runScheduledMovieRestart() {
-  if (MOVIE_MODE && isGameOver()) {
-    startNewGame();
   }
 }

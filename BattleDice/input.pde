@@ -6,7 +6,10 @@ void keyPressed() {
     return;
   }
 
-  if ((key == 'r' || key == 'R' || keyCode == 'R') && keyEvent.isControlDown()) {
+  if (key == 'q' || key == 'Q' || keyCode == 'Q') {
+    returnToPlayerSelectScreen();
+  }
+  else if ((key == 'r' || key == 'R' || keyCode == 'R') && keyEvent.isControlDown()) {
     startNewGame();
   }
   else if (key == 'd') {

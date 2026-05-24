@@ -11,6 +11,7 @@
  */
 
 // Tweakables
+final boolean SKIP_MENU_SCREEN = true;//false;
 final int NUM_STARTING_DICE_PER_TEAM = 6;
 final int MIN_CELLS_PER_COUNTRY = 5;
 final int MAX_CELLS_PER_COUNTRY = 12;
@@ -19,15 +20,6 @@ final int GRID_HEIGHT = 18;
 final int EDGE_LAND_AVOIDANCE_DISTANCE = 2;
 final float EDGE_LAND_GENERATION_CHANCE_PER_STEP = 0.4;
 final int STARTING_COUNTRY_MIN_DISTANCE = 3;
-// Constants
-final boolean MOVIE_MODE = false;
-final boolean RUN_STARTUP_RULE_CHECKS = true;
-int NUM_PLAYERS = 4;
-final int HUMAN_PLAYER_INDEX = 0;
-final int NUM_FACES = 6; // it's hip to be hex.
-final int DICE_SIDES = 6;
-final float NORMAL_TIME_SCALE = 1;
-final float FAST_FORWARD_TIME_SCALE = 6;
 final float SELECTED_COUNTRY_RAISE = -7;
 final float BATTLE_COUNTRY_RAISE = -7;
 final float SELECTED_COUNTRY_BOB_AMOUNT = 0.6;
@@ -45,6 +37,12 @@ final int PLAYER_LUCK_DECIMALS = 1;
 final float MIGRATION_DURATION = 0.65;
 final float MIGRATION_DIE_STAGGER = 0.055;
 final float MIGRATION_DIE_ARC_HEIGHT = 42;
+// Constants
+final int HUMAN_PLAYER_INDEX = 0;
+final int NUM_FACES = 6; // it's hip to be hex.
+final int DICE_SIDES = 6;
+final float NORMAL_TIME_SCALE = 1;
+final float FAST_FORWARD_TIME_SCALE = 6;
 final int GAME_MODE_PLAYER_SELECT = 0;
 final int GAME_MODE_HUMAN_TURN = 1;
 final int GAME_MODE_AI_TURN = 2;
@@ -53,20 +51,27 @@ final int GAME_MODE_MIGRATION = 4;
 final int GAME_MODE_GAME_OVER = 5;
 final int SCHEDULED_ACTION_NONE = 0;
 final int SCHEDULED_ACTION_AI_STEP = 1;
-final int SCHEDULED_ACTION_MOVIE_RESTART = 2;
+final String BACKGROUND_IMAGE_PATH = "background.png";
+final String HEX_TILE_IMAGE_PATH = "hex-tile.png";
+final String HEX_TILE_OVERLAY_IMAGE_PATH = "hex-tile-overlay.png";
 
 // Grid Properties
 float tileRadius = 22;
 float hexRatio = 0.8457;
+final float HEX_CELL_RENDER_BUFFER = 1;
 PVector gridPos; // the TOP-left corner of the grid.
 Cell[][] gridCells;
 Country[] countries=new Country[0];
+PImage backgroundImage;
+PImage hexTileImage;
+PImage hexTileOverlayImage;
 float[][] diceSumOddsCache = new float[MAX_CELLS_PER_COUNTRY + 1][];
 float[][] winChanceCache = new float[MAX_CELLS_PER_COUNTRY + 1][MAX_CELLS_PER_COUNTRY + 1];
 boolean[][] winChanceCached = new boolean[MAX_CELLS_PER_COUNTRY + 1][MAX_CELLS_PER_COUNTRY + 1];
 
 // Game Loop
-int gameMode = MOVIE_MODE ? GAME_MODE_AI_TURN : GAME_MODE_PLAYER_SELECT;
+int gameMode = SKIP_MENU_SCREEN ? GAME_MODE_HUMAN_TURN : GAME_MODE_PLAYER_SELECT;
+int NUM_PLAYERS = 4;
 int currPlayerIndex;
 boolean[] eliminated;
 String currPlayerName;
@@ -95,15 +100,14 @@ float timeWhenStartedMigration;
 
 // ======== SETUP ========
 void setup() {
+  size(1024, 768, P2D);
   colorMode(HSB);
-  size(1024, 768);
   textAlign(CENTER, CENTER);
   // textFont(loadFont("AdobeDevanagari-Bold-48.vlw"));
+  loadImageAssets();
   pmillis = millis();
-  if (RUN_STARTUP_RULE_CHECKS) {
-    runStartupRuleChecks();
-  }
-  if (MOVIE_MODE) {
+  runStartupRuleChecks();
+  if (SKIP_MENU_SCREEN) {
     startNewGame();
   }
 }
@@ -111,7 +115,7 @@ void setup() {
 
 // ======== DRAW ========
 void draw() {
-  background(0x1F85DE);
+  drawBackground();
   
   // Update timeElapsed.
   currTime += (millis()-pmillis) * 0.001 * timeScale;
@@ -147,10 +151,28 @@ void draw() {
     }
   }
 
-  if (!MOVIE_MODE) {
-    drawCurrentPlayerHeader();
-    drawEndTurnButton();
+  drawCurrentPlayerHeader();
+  drawEndTurnButton();
+}
+
+void loadImageAssets() {
+  backgroundImage = loadImage(BACKGROUND_IMAGE_PATH);
+  hexTileImage = loadImage(HEX_TILE_IMAGE_PATH);
+  hexTileOverlayImage = loadImage(HEX_TILE_OVERLAY_IMAGE_PATH);
+}
+
+void drawBackground() {
+  if (backgroundImage == null) {
+    background(0x1F85DE);
+    return;
   }
+
+  background(0);
+  float imageScale = max(width / (float)backgroundImage.width, height / (float)backgroundImage.height);
+  float drawWidth = backgroundImage.width * imageScale;
+  float drawHeight = backgroundImage.height * imageScale;
+  imageMode(CORNER);
+  image(backgroundImage, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
 }
 
 void drawGridCells() {
@@ -334,6 +356,30 @@ void drawHexagon(float x, float y, float radius) {
   vertex( radius*hexRatio, radius*0.5);
   endShape();
   translate(-x, -y); // popMatrix
+}
+
+void drawHexTileImage(PVector pos, color tileColor) {
+  if (hexTileImage == null) {
+    return;
+  }
+
+  int tileWidth = round((tileRadius + HEX_CELL_RENDER_BUFFER) * hexRatio * 2);
+  int tileHeight = round((tileRadius + HEX_CELL_RENDER_BUFFER) * 2);
+  imageMode(CENTER);
+  tint(tileColor);
+  image(hexTileImage, pos.x, pos.y, tileWidth, tileHeight);
+  noTint();
+}
+
+void drawHexTileOverlayImage(PVector pos) {
+  if (hexTileOverlayImage == null) {
+    return;
+  }
+
+  int tileWidth = round((tileRadius + HEX_CELL_RENDER_BUFFER) * hexRatio * 2);
+  int tileHeight = round((tileRadius + HEX_CELL_RENDER_BUFFER) * 2);
+  imageMode(CENTER);
+  image(hexTileOverlayImage, pos.x, pos.y, tileWidth, tileHeight);
 }
 void drawHexLine(Vector2Int gridPos, int face) {
   pushMatrix();

@@ -156,7 +156,7 @@ class Country
       && selectedCountryIndex > -1
       && canMigrateDice(countries[selectedCountryIndex], this);
 
-    color baseColor = myTeamIndex > -1 ? teamColor(myTeamIndex) : color(32, 34, 234);
+    color baseColor = myTeamIndex > -1 ? teamColor(myTeamIndex) : color(28, 70, 255);//0xfff5dbb2;//
     if (!isInDanger && !canReceiveMigration) {
       return baseColor;
     } else {
@@ -227,15 +227,45 @@ class Country
     translate(shudderOffsetX(), displayOffsetY + shudderOffsetY());
     for (int i=0; i<cells.size (); i++) {
       Cell cell = (Cell) cells.get(i);
-      drawHexagon(cell.screenPos);
+      drawHexagon(cell.screenPos, tileRadius + HEX_CELL_RENDER_BUFFER);
     }
     popMatrix();
   }
+
+  void drawMyCellsTileImages() {
+    if (hexTileImage == null) {
+      return;
+    }
+
+    color tileColor = myColor();
+    pushMatrix();
+    translate(shudderOffsetX(), displayOffsetY + shudderOffsetY());
+    for (int i=0; i<cells.size (); i++) {
+      Cell cell = (Cell) cells.get(i);
+      drawHexTileImage(cell.screenPos, tileColor);
+    }
+    popMatrix();
+  }
+
+  void drawMyCellsTileOverlayImages() {
+    if (hexTileOverlayImage == null) {
+      return;
+    }
+
+    pushMatrix();
+    translate(shudderOffsetX(), displayOffsetY + shudderOffsetY());
+    for (int i=0; i<cells.size (); i++) {
+      Cell cell = (Cell) cells.get(i);
+      drawHexTileOverlayImage(cell.screenPos);
+    }
+    popMatrix();
+  }
+
   void drawMyCellsFill() {
     // Cells
-    fill(myColor());
     noStroke();
-    drawMyCellsShapes();
+    drawMyCellsTileImages();
+    drawMyCellsTileOverlayImages();
     if (isCountryHoveredAndInteractable(this)) {
       fill(255, 80);
       drawMyCellsShapes();

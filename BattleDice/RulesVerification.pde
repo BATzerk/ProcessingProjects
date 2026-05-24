@@ -1,3 +1,4 @@
+// Lightweight startup sanity checks for core dice odds and win chance rules.
 void runStartupRuleChecks() {
   int failures = 0;
   failures += checkDiceOddsTotal();
