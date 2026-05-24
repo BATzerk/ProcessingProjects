@@ -30,6 +30,12 @@ final float END_TURN_BUTTON_WIDTH = 134;
 final float END_TURN_BUTTON_HEIGHT = 42;
 final float END_TURN_BUTTON_MARGIN = 16;
 final float END_TURN_BUTTON_RADIUS = 6;
+final float BOARD_MIN_SIDE_PADDING = 28;
+final float BASE_TILE_RADIUS = 22;
+final float BOARD_TOP_PADDING = 8;
+final float BOARD_BOTTOM_PADDING = 34;
+final float BOARD_FIT_EXTRA_PADDING = 12;
+final float BOARD_MIN_TILE_RADIUS = 0.1;
 final float WIN_CHANCE_TOOLTIP_PAD_X = 10;
 final float WIN_CHANCE_TOOLTIP_PAD_Y = 7;
 final float WIN_CHANCE_TOOLTIP_RADIUS = 5;
@@ -60,6 +66,8 @@ float tileRadius = 22;
 float hexRatio = 0.8457;
 final float HEX_CELL_RENDER_BUFFER = 1;
 PVector gridPos; // the TOP-left corner of the grid.
+int boardLayoutWidth = -1;
+int boardLayoutHeight = -1;
 Cell[][] gridCells;
 Country[] countries=new Country[0];
 PImage backgroundImage;
@@ -101,10 +109,12 @@ float timeWhenStartedMigration;
 // ======== SETUP ========
 void setup() {
   size(1024, 768, P2D);
+  surface.setResizable(true);
   colorMode(HSB);
   textAlign(CENTER, CENTER);
   // textFont(loadFont("AdobeDevanagari-Bold-48.vlw"));
   loadImageAssets();
+  updateBoardLayout();
   pmillis = millis();
   runStartupRuleChecks();
   if (SKIP_MENU_SCREEN) {
@@ -115,6 +125,7 @@ void setup() {
 
 // ======== DRAW ========
 void draw() {
+  updateBoardLayout();
   drawBackground();
   
   // Update timeElapsed.
@@ -153,6 +164,122 @@ void draw() {
 
   drawCurrentPlayerHeader();
   drawEndTurnButton();
+}
+
+void updateBoardLayout() {
+  if (width == boardLayoutWidth && height == boardLayoutHeight) {
+    return;
+  }
+
+  boardLayoutWidth = width;
+  boardLayoutHeight = height;
+  applyBoardLayout();
+}
+
+void applyBoardLayout() {
+  float fitLeft = min(BOARD_MIN_SIDE_PADDING, max(0, width * 0.08));
+  float fitTop = min(ACTIVE_PLAYER_BANNER_HEIGHT + BOARD_TOP_PADDING, max(0, height * 0.18));
+  float fitRight = max(fitLeft + 1, width - fitLeft);
+  float fitBottom = max(fitTop + 1, height - min(34 + BOARD_BOTTOM_PADDING, max(0, height * 0.12)));
+  float fitWidth = fitRight - fitLeft;
+  float fitHeight = fitBottom - fitTop;
+  float fitExtraPadding = min(BOARD_FIT_EXTRA_PADDING, max(0, min(fitWidth, fitHeight) * 0.18));
+  float boardUnitWidth = getBoardUnitWidth();
+  float boardUnitHeight = getBoardUnitHeight();
+  float geometryFitWidth = max(1, fitWidth - fitExtraPadding * 2);
+  float geometryFitHeight = max(1, fitHeight - fitExtraPadding * 2);
+
+  tileRadius = max(BOARD_MIN_TILE_RADIUS, min(geometryFitWidth / boardUnitWidth, geometryFitHeight / boardUnitHeight));
+
+  float boardMinX = getBoardMinX() - fitExtraPadding;
+  float boardMinY = getBoardMinY() - fitExtraPadding;
+  float boardWidth = getBoardWidth() + fitExtraPadding * 2;
+  float boardHeight = getBoardHeight() + fitExtraPadding * 2;
+  gridPos = new PVector(
+    fitLeft + (fitWidth - boardWidth) / 2 - boardMinX,
+    fitTop + (fitHeight - boardHeight) / 2 - boardMinY
+  );
+
+  updateCellScreenPositions();
+}
+
+float boardScale() {
+  return tileRadius / BASE_TILE_RADIUS;
+}
+
+void scaledStrokeWeight(float baseWeight) {
+  strokeWeight(max(0.5, baseWeight * boardScale()));
+}
+
+void updateCellScreenPositions() {
+  if (gridCells == null) {
+    return;
+  }
+
+  for (int col = 0; col < gridCells.length; col++) {
+    for (int row = 0; row < gridCells[col].length; row++) {
+      gridCells[col][row].screenPos.x = getScreenX(col, row);
+      gridCells[col][row].screenPos.y = getScreenY(row);
+    }
+  }
+}
+
+float getBoardUnitWidth() {
+  return getBoardWidthForRadius(1);
+}
+
+float getBoardUnitHeight() {
+  return getBoardHeightForRadius(1);
+}
+
+float getBoardWidth() {
+  return getBoardWidthForRadius(tileRadius);
+}
+
+float getBoardHeight() {
+  return getBoardHeightForRadius(tileRadius);
+}
+
+float getBoardWidthForRadius(float radius) {
+  return getBoardMaxXForRadius(radius) - getBoardMinXForRadius(radius);
+}
+
+float getBoardHeightForRadius(float radius) {
+  return getBoardMaxYForRadius(radius) - getBoardMinYForRadius(radius);
+}
+
+float getBoardMinX() {
+  return getBoardMinXForRadius(tileRadius);
+}
+
+float getBoardMinY() {
+  return getBoardMinYForRadius(tileRadius);
+}
+
+float getBoardMaxX() {
+  return getBoardMaxXForRadius(tileRadius);
+}
+
+float getBoardMaxY() {
+  return getBoardMaxYForRadius(tileRadius);
+}
+
+float getBoardMinXForRadius(float radius) {
+  return -radius * hexRatio;
+}
+
+float getBoardMinYForRadius(float radius) {
+  return -radius;
+}
+
+float getBoardMaxXForRadius(float radius) {
+  float rightmostCenter = (GRID_WIDTH - 1) * radius * 2 * hexRatio;
+  rightmostCenter += radius * hexRatio;
+  return rightmostCenter + radius * hexRatio;
+}
+
+float getBoardMaxYForRadius(float radius) {
+  return (GRID_HEIGHT - 1) * radius * 3 / 2 + radius;
 }
 
 void loadImageAssets() {
@@ -249,7 +376,7 @@ void drawAttackWinChanceTooltip() {
   fill(teamHue(currPlayerIndex), 145, 245);
   rect(x, y, tooltipWidth, tooltipHeight, WIN_CHANCE_TOOLTIP_RADIUS);
   stroke(255, 210);
-  strokeWeight(1.5);
+  scaledStrokeWeight(1.5);
   noFill();
   rect(x + 1, y + 1, tooltipWidth - 2, tooltipHeight - 2, WIN_CHANCE_TOOLTIP_RADIUS);
   fill(0, 180);
@@ -323,7 +450,7 @@ void drawEndTurnButton() {
   rect(x, y, END_TURN_BUTTON_WIDTH, END_TURN_BUTTON_HEIGHT, END_TURN_BUTTON_RADIUS);
 
   stroke(255, isHovered ? 230 : 130);
-  strokeWeight(isHovered ? 2.5 : 1.5);
+  scaledStrokeWeight(isHovered ? 2.5 : 1.5);
   noFill();
   rect(x + 1, y + 1, END_TURN_BUTTON_WIDTH - 2, END_TURN_BUTTON_HEIGHT - 2, END_TURN_BUTTON_RADIUS);
 

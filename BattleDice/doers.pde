@@ -83,8 +83,6 @@ void startNewGame() {
 void remakeGridTotallyRandomly() {
   int cols = GRID_WIDTH;
   int rows = GRID_HEIGHT;
-  float gw = cols * tileRadius * 1.678;
-  float gh = rows * tileRadius * 1.44;
 
   // Cells
   gridCells = new Cell[cols][rows];
@@ -94,7 +92,7 @@ void remakeGridTotallyRandomly() {
     }
   }
 
-  gridPos = new PVector((width - gw) / 2, (height - gh) / 2);
+  applyBoardLayout();
 
   // Countries
   int numCountries = cols * rows / 18;
@@ -307,7 +305,7 @@ void drawMigrationDice() {
   pushStyle();
   fill(250);
   stroke(teamColor(currPlayerIndex));
-  strokeWeight(2);
+  scaledStrokeWeight(2);
   for (int i = 0; i < migrationDiceCount; i++) {
     float elapsed = currTime - timeWhenStartedMigration - i * MIGRATION_DIE_STAGGER;
     float t = easeInOut(elapsed / MIGRATION_DURATION);

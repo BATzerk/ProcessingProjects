@@ -28,7 +28,7 @@ void drawPlayerSelectScreen() {
   fill(0, 150);
   rect(panelX, panelY, PLAYER_SELECT_PANEL_WIDTH, PLAYER_SELECT_PANEL_HEIGHT, 8);
   stroke(255, 80);
-  strokeWeight(1.5);
+  scaledStrokeWeight(1.5);
   noFill();
   rect(panelX + 1, panelY + 1, PLAYER_SELECT_PANEL_WIDTH - 2, PLAYER_SELECT_PANEL_HEIGHT - 2, 8);
 
@@ -97,7 +97,7 @@ void drawPlayerSelectButton(String label, float x, float y, float w, float h, bo
   fill(isSelected ? color(42, 170, isHovered ? 255 : 230) : color(0, 0, isHovered ? 88 : 62));
   rect(x, y, w, h, PLAYER_SELECT_BUTTON_RADIUS);
   stroke(255, isHovered || isSelected ? 220 : 105);
-  strokeWeight(isSelected ? 2.5 : 1.5);
+  scaledStrokeWeight(isSelected ? 2.5 : 1.5);
   noFill();
   rect(x + 1, y + 1, w - 2, h - 2, PLAYER_SELECT_BUTTON_RADIUS);
   fill(isSelected ? 0 : 255);
@@ -128,17 +128,20 @@ void handlePlayerSelectMousePressed() {
   } else if (isMouseOverRect(panelX + 347, panelY + 164, 46, PLAYER_SELECT_BUTTON_HEIGHT)) {
     changeSetupAICount(1);
   } else if (isMouseOverRect(panelX + 48, panelY + 250, 104, PLAYER_SELECT_BUTTON_HEIGHT)) {
-    setupAIDifficulty = AI_DIFFICULTY_EASY;
+    setAIDifficulty(AI_DIFFICULTY_EASY);
   } else if (isMouseOverRect(panelX + 163, panelY + 250, 104, PLAYER_SELECT_BUTTON_HEIGHT)) {
-    setupAIDifficulty = AI_DIFFICULTY_NORMAL;
+    setAIDifficulty(AI_DIFFICULTY_NORMAL);
   } else if (isMouseOverRect(panelX + 278, panelY + 250, 104, PLAYER_SELECT_BUTTON_HEIGHT)) {
-    setupAIDifficulty = AI_DIFFICULTY_HARD;
+    setAIDifficulty(AI_DIFFICULTY_HARD);
   } else if (isMouseOverRect(panelX + 110, panelY + 368, 210, PLAYER_SELECT_BUTTON_HEIGHT)) {
     startGameFromPlayerSelect();
   }
 }
 
 void handlePlayerSelectKeyPressed() {
+  if (handleAIDifficultyKeyPressed()) {
+    return;
+  }
   if (keyCode == ENTER) {
     startGameFromPlayerSelect();
   }
@@ -186,6 +189,34 @@ boolean isPlayerHumanControlled(int playerIndex) {
 
 AI createAIForTeam(int teamIndex) {
   return new AI(teamIndex, setupAIDifficulty);
+}
+
+boolean handleAIDifficultyKeyPressed() {
+  if (key == '1') {
+    setAIDifficulty(AI_DIFFICULTY_EASY);
+    return true;
+  }
+  if (key == '2') {
+    setAIDifficulty(AI_DIFFICULTY_NORMAL);
+    return true;
+  }
+  if (key == '3') {
+    setAIDifficulty(AI_DIFFICULTY_HARD);
+    return true;
+  }
+  return false;
+}
+
+void setAIDifficulty(int difficulty) {
+  setupAIDifficulty = difficulty;
+  if (botPlayers != null) {
+    for (int i=0; i<botPlayers.length; i++) {
+      if (botPlayers[i] != null) {
+        botPlayers[i].difficulty = difficulty;
+      }
+    }
+  }
+  println("AI difficulty changed to " + getAIDifficultyName(difficulty));
 }
 
 String getAIDifficultyName(int difficulty) {

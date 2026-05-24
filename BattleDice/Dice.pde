@@ -282,7 +282,7 @@ void drawUnderdogVictoryBanner(float elapsed) {
   fill(teamHue(winningUnderdogTeamIndex), 122, bannerBrightness, alphaValue);
   rect(width / 2, y, bannerWidth, bannerHeight, 6);
   stroke(255, alphaValue * 0.8);
-  strokeWeight(2);
+  scaledStrokeWeight(2);
   noFill();
   rect(width / 2, y, bannerWidth - 8, bannerHeight - 8, 6);
   fill(0, alphaValue * 0.72);
@@ -392,7 +392,7 @@ void drawDieFace(float x, float y, float radius, int value, color dieColor, floa
   color faceColor = lerpColor(color(0, 0, 255, alphaValue), visibleDieColor, 0.22);
   fill(faceColor);
   stroke(visibleDieColor);
-  strokeWeight(2);
+  scaledStrokeWeight(2);
   rectMode(CENTER);
   rect(x, y, radius * 2, radius * 2);
 

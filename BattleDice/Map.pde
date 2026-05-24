@@ -9,6 +9,9 @@ final float COUNTRY_SHUDDER_DURATION = 0.45;
 final float COUNTRY_SHUDDER_AMOUNT = 5;
 final float COUNTRY_CAPTURE_HIGHLIGHT_DURATION = 1.0;
 final float COUNTRY_DIE_RADIUS_SCALE = 0.65;
+final float BOARD_SHADOW_OFFSET_Y = 6;
+final float BOARD_SHADOW_OUTER_PAD = HEX_CELL_RENDER_BUFFER + 8;
+final float BOARD_SHADOW_MIDDLE_PAD = HEX_CELL_RENDER_BUFFER + 4;
 
 class Country
 {
@@ -223,11 +226,15 @@ class Country
   }
 
   void drawMyCellsShapes() {
+    drawMyCellsShapes(HEX_CELL_RENDER_BUFFER);
+  }
+
+  void drawMyCellsShapes(float radiusPadding) {
     pushMatrix();
     translate(shudderOffsetX(), displayOffsetY + shudderOffsetY());
     for (int i=0; i<cells.size (); i++) {
       Cell cell = (Cell) cells.get(i);
-      drawHexagon(cell.screenPos, tileRadius + HEX_CELL_RENDER_BUFFER);
+      drawHexagon(cell.screenPos, tileRadius + radiusPadding);
     }
     popMatrix();
   }
@@ -281,7 +288,7 @@ class Country
     translate(shudderOffsetX(), displayOffsetY + shudderOffsetY());
     fill(250);
     stroke(60);
-    strokeWeight(1);
+    scaledStrokeWeight(1);
     int visibleDice = getVisibleCountryDiceCount(this);
     for (int i=0; i<visibleDice; i++) {
       drawHexagon(dieScreenPos(i), tileRadius * COUNTRY_DIE_RADIUS_SCALE);
@@ -290,9 +297,13 @@ class Country
   }
   void drawMyCellsShadow() {
     pushMatrix();
-    translate(0, 6); // offset for shadow.
-    fill(0, 40);
+    translate(0, BOARD_SHADOW_OFFSET_Y);
     noStroke();
+    fill(0, 20);
+    drawMyCellsShapes(BOARD_SHADOW_OUTER_PAD);
+    fill(0, 40);
+    drawMyCellsShapes(BOARD_SHADOW_MIDDLE_PAD);
+    fill(0, 80);
     drawMyCellsShapes();
     popMatrix();
   }
@@ -332,7 +343,7 @@ class Country
         if (isBorder) {
           if (borderMode == BORDER_HOVERED_ATTACK) {
             stroke(teamHue(currPlayerIndex), 160, 255);
-            strokeWeight(4.5);
+            scaledStrokeWeight(4.5);
           }
           else if (borderMode == BORDER_ATTACKABLE) {
             float wave = sinRange(
@@ -344,11 +355,11 @@ class Country
             color highlightBorderColorA = color(170);//color(teamHue(currPlayerIndex), 80, 255);
             color highlightBorderColorB = color(250);//color(teamHue(currPlayerIndex), 200, 255);
             stroke(lerpColor(highlightBorderColorA, highlightBorderColorB, wave));
-            strokeWeight(3);
+            scaledStrokeWeight(3);
           }
           else {
             stroke(baseBorderColor);
-            strokeWeight(2);
+            scaledStrokeWeight(2);
           }
           drawHexLine(thisCell.gridPos, face);
         }

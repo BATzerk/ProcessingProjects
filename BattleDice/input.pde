@@ -6,7 +6,10 @@ void keyPressed() {
     return;
   }
 
-  if (key == 'q' || key == 'Q' || keyCode == 'Q') {
+  if (handleAIDifficultyKeyPressed()) {
+    return;
+  }
+  else if (key == 'q' || key == 'Q' || keyCode == 'Q') {
     returnToPlayerSelectScreen();
   }
   else if ((key == 'r' || key == 'R' || keyCode == 'R') && keyEvent.isControlDown()) {
