@@ -35,6 +35,10 @@ final float END_TURN_BUTTON_RADIUS = 6;
 final float WIN_CHANCE_TOOLTIP_PAD_X = 10;
 final float WIN_CHANCE_TOOLTIP_PAD_Y = 7;
 final float WIN_CHANCE_TOOLTIP_RADIUS = 5;
+final int PLAYER_LUCK_DECIMALS = 1;
+final float MIGRATION_DURATION = 0.65;
+final float MIGRATION_DIE_STAGGER = 0.055;
+final float MIGRATION_DIE_ARC_HEIGHT = 42;
 
 // Grid Properties
 float tileRadius = 22;
@@ -66,6 +70,12 @@ Country attackingCountry, defendingCountry;
 int attackSum, defendSum;
 float timeWhenStartedRolling;
 float timeWhenStartNextGame;
+boolean isMigrationMode = false;
+Country migrationFromCountry, migrationToCountry;
+int migrationDiceCount;
+PVector[] migrationDieStartPositions;
+PVector[] migrationDieEndPositions;
+float timeWhenStartedMigration;
 
 
 // ======== SETUP ========
@@ -101,6 +111,11 @@ void draw() {
   // DRAW!
   drawGridCells();
   drawAttackWinChanceTooltip();
+  drawMigrationDice();
+
+  if (isMigrationMode && currTime - timeWhenStartedMigration > currentMigrationDuration()) {
+    finishMigrationDice();
+  }
 
   // ---- BATTLE MODE ----
   if (isBattleMode) {
@@ -116,7 +131,7 @@ void draw() {
     }
   }
 
-  if (!isBattleMode && isAIExecutingTurn && botPlayers[currPlayerIndex] != null) {
+  if (!isBattleMode && !isMigrationMode && isAIExecutingTurn && botPlayers[currPlayerIndex] != null) {
     if (currTime > timeWhenNextAIStep) {
       botPlayers[currPlayerIndex].executeNextStep();
     }
@@ -235,6 +250,7 @@ void drawCurrentPlayerHeader() {
     text(getPlayerName(i), x + bannerWidth/2, isActive ? 21 : 14);
     textSize(isActive ? 34 : 18);
     text(getPlayerDiceTotal(i) + " dice", x + bannerWidth/2, isActive ? 48 : 31);
+    drawPlayerLuckiness(i, x, bannerWidth, isActive);
   }
 
   fill(0, 150);

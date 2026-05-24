@@ -10,10 +10,17 @@ void startNewGame() {
     setCurrPlayerIndex(0);
     turnCount = 1;
     setSelectedCountryIndex(-1);
+    resetPlayerLuckiness();
     isBattleMode = false;
     isAIExecutingTurn = false;
     attackingCountry = null;
     defendingCountry = null;
+    isMigrationMode = false;
+    migrationFromCountry = null;
+    migrationToCountry = null;
+    migrationDiceCount = 0;
+    migrationDieStartPositions = null;
+    migrationDieEndPositions = null;
     statusText = "";
     timeScale = NORMAL_TIME_SCALE;
     doHideBattleDice = false;
@@ -72,6 +79,7 @@ void startNewGame() {
     doHideBattleDice = true;
     timeScale = 1000;
     eliminated = new boolean[NUM_PLAYERS]; // assuming this fills false
+    resetPlayerLuckiness();
     botPlayers = new AI[NUM_PLAYERS]; // assuming this fills false
     for (int i = 0; i < NUM_PLAYERS; i++) {
       botPlayers[i] = createAIForTeam(i);
@@ -175,6 +183,13 @@ boolean isCountryRaisedForDrawing(int countryIndex) {
   return countryIndex == selectedCountryIndex || isCountryInCurrentBattle(countryIndex);
 }
 
+int getVisibleCountryDiceCount(Country country) {
+  if (isMigrationMode && migrationFromCountry != null && country.ID == migrationFromCountry.ID) {
+    return 1;
+  }
+  return country.myDice;
+}
+
 void updateCountryDisplayOffsets() {
   for (int i=0; i<countries.length; i++) {
     float targetOffsetY = 0;
@@ -229,14 +244,73 @@ void countryAttackOther(Country attacker, Country defender) {
 }
 
 void migrateDice(Country from, Country _to) {
-  int diceToGive = from.myDice - 1;
-  _to.myDice += diceToGive;
-  from.myDice = 1;
+  startMigrationDice(from, _to);
+}
+
+void startMigrationDice(Country from, Country _to) {
+  migrationDiceCount = from.myDice - 1;
+  migrationFromCountry = from;
+  migrationToCountry = _to;
+  isMigrationMode = true;
+  timeWhenStartedMigration = currTime;
   setSelectedCountryIndex(-1);
-  if (isCurrentPlayerHuman()) {
-    statusText = "Moved " + diceToGive + " dice. Turn ended.";
+  updateCountryDisplayOffsets();
+
+  migrationDieStartPositions = new PVector[migrationDiceCount];
+  migrationDieEndPositions = new PVector[migrationDiceCount];
+  for (int i = 0; i < migrationDiceCount; i++) {
+    migrationDieStartPositions[i] = getCountryDieScreenPos(from, i + 1);
+    migrationDieEndPositions[i] = getCountryDieScreenPos(_to, _to.myDice + i);
   }
+
+  if (isCurrentPlayerHuman()) {
+    statusText = "Moving " + migrationDiceCount + " dice. Turn ending...";
+  }
+}
+
+float currentMigrationDuration() {
+  return MIGRATION_DURATION + max(0, migrationDiceCount - 1) * MIGRATION_DIE_STAGGER;
+}
+
+void finishMigrationDice() {
+  if (!isMigrationMode) {
+    return;
+  }
+
+  migrationToCountry.myDice += migrationDiceCount;
+  migrationFromCountry.myDice = 1;
+  if (isCurrentPlayerHuman()) {
+    statusText = "Moved " + migrationDiceCount + " dice. Turn ended.";
+  }
+  isMigrationMode = false;
+  migrationFromCountry = null;
+  migrationToCountry = null;
+  migrationDiceCount = 0;
+  migrationDieStartPositions = null;
+  migrationDieEndPositions = null;
   startNextPlayerTurn();
+}
+
+void drawMigrationDice() {
+  if (!isMigrationMode || migrationDieStartPositions == null || migrationDieEndPositions == null) {
+    return;
+  }
+
+  pushStyle();
+  fill(250);
+  stroke(teamColor(currPlayerIndex));
+  strokeWeight(2);
+  for (int i = 0; i < migrationDiceCount; i++) {
+    float elapsed = currTime - timeWhenStartedMigration - i * MIGRATION_DIE_STAGGER;
+    float t = easeInOut(elapsed / MIGRATION_DURATION);
+    if (t <= 0) {
+      continue;
+    }
+    PVector pos = PVector.lerp(migrationDieStartPositions[i], migrationDieEndPositions[i], t);
+    pos.y -= sin(t * PI) * MIGRATION_DIE_ARC_HEIGHT;
+    drawHexagon(pos, tileRadius * COUNTRY_DIE_RADIUS_SCALE);
+  }
+  popStyle();
 }
 
 void moveIntoCountry(Country from, Country _to) {

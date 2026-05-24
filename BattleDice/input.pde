@@ -30,7 +30,7 @@ void keyPressed() {
   else if (key == 'f' || key == 'F') {
     timeScale = FAST_FORWARD_TIME_SCALE;
   }
-  else if (keyCode == ENTER && !isBattleMode && !isGameOver && isCurrentPlayerHuman()) {
+  else if (keyCode == ENTER && !isBattleMode && !isMigrationMode && !isGameOver && isCurrentPlayerHuman()) {
     startNextPlayerTurn();
   }
 }
@@ -48,7 +48,7 @@ void mousePressed() {
     return;
   }
 
-  if (!isCurrentPlayerHuman() || isBattleMode || isGameOver) {
+  if (!isCurrentPlayerHuman() || isBattleMode || isMigrationMode || isGameOver) {
     return;
   }
 

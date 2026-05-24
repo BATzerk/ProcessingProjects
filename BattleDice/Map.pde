@@ -252,7 +252,8 @@ class Country
     fill(250);
     stroke(60);
     strokeWeight(1);
-    for (int i=0; i<myDice; i++) {
+    int visibleDice = getVisibleCountryDiceCount(this);
+    for (int i=0; i<visibleDice; i++) {
       drawHexagon(dieScreenPos(i), tileRadius * COUNTRY_DIE_RADIUS_SCALE);
     }
     popMatrix();

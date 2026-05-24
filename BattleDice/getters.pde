@@ -119,7 +119,7 @@ boolean areCountriesInSameOwnedGroup(Country from, Country _to) {
 }
 
 boolean isCountryInteractable(Country country) {
-  if (!isCurrentPlayerHuman() || isBattleMode || isGameOver || country == null) {
+  if (!isCurrentPlayerHuman() || isBattleMode || isMigrationMode || isGameOver || country == null) {
     return false;
   }
   if (selectedCountryIndex == -1) {
@@ -129,7 +129,7 @@ boolean isCountryInteractable(Country country) {
 }
 
 boolean isCountryHovered(Country country) {
-  if (!isCurrentPlayerHuman() || isBattleMode || isGameOver) {
+  if (!isCurrentPlayerHuman() || isBattleMode || isMigrationMode || isGameOver) {
     return false;
   }
   Country hovered = getCountryByScreenPos(mouseX, mouseY);
@@ -141,7 +141,7 @@ boolean isCountryHoveredAndInteractable(Country country) {
 }
 
 boolean shouldShowEndTurnButton() {
-  return isCurrentPlayerHuman() && !isBattleMode && !isGameOver;
+  return isCurrentPlayerHuman() && !isBattleMode && !isMigrationMode && !isGameOver;
 }
 
 float getEndTurnButtonX() {

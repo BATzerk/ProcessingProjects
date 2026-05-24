@@ -147,7 +147,9 @@ int updateBattleDiceValues(BattleDie[] dice, int[] values, float elapsed) {
 
 void finishBattle() {
   isBattleMode = false;
-  if (attackSum > defendSum) {
+  boolean attackerWon = attackSum > defendSum;
+  recordBattleLuckiness(attackingCountry, defendingCountry, attackerWon);
+  if (attackerWon) {
     moveIntoCountry(attackingCountry, defendingCountry);
     defendingCountry.startCaptureHighlight();
   }
