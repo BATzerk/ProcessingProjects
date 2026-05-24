@@ -31,19 +31,19 @@ void startNewGame() {
       remakeGridTotallyRandomly();
 
       // Assign starting countries
-      Set<Integer> invalid = new HashSet<Integer>(); // save taken and neighbors
+      Set<Integer> invalid = new HashSet<Integer>(); // save taken and nearby starts
       int assigned = 0;
       for (int i = 0; (MOVIE_MODE || assigned < NUM_PLAYERS) && i < countries.length; i++) {
-        if (invalid.contains(i)) { // can't choose an existing neighbor
+        if (invalid.contains(i)) {
+          continue;
+        }
+        if (!canCountryHoldStartingDice(countries[i])) {
           continue;
         }
         countries[i].myTeamIndex = assigned++;
         countries[i].myDice = NUM_STARTING_DICE_PER_TEAM;
 
-        invalid.add(i);
-        for (int c = 0; c < countries[i].neighbors.length; c++) {
-          invalid.add(countries[i].neighbors[c].ID);
-        }
+        addCountriesWithinStartingDistance(countries[i], invalid);
       }
 
       // Moved so we see the error if we give up
@@ -125,21 +125,43 @@ void remakeGridTotallyRandomly() {
   }
 }
 
+void addCountriesWithinStartingDistance(Country country, Set<Integer> invalid) {
+  addCountriesWithinDistance(country, STARTING_COUNTRY_MIN_DISTANCE - 1, invalid, new HashSet<Integer>());
+}
+
+void addCountriesWithinDistance(Country country, int distanceRemaining, Set<Integer> ids, Set<Integer> checked) {
+  if (country == null || checked.contains(country.ID)) {
+    return;
+  }
+
+  checked.add(country.ID);
+  ids.add(country.ID);
+  if (distanceRemaining <= 0) {
+    return;
+  }
+
+  for (int i = 0; i < country.neighbors.length; i++) {
+    addCountriesWithinDistance(country.neighbors[i], distanceRemaining - 1, ids, checked);
+  }
+}
+
 void growCountryStep() {
   for (int i = 0; i < countries.length; i++) {
     if (countries[i].cells.size() == MAX_CELLS_PER_COUNTRY) {
       continue;
     }
     Cell newFriend;
+    boolean shouldAddCell = false;
     int numAttemptsLeft = 2;
     do {
       Cell edge = countries[i].getRandomEdgeCell();
       int face = floor(random(NUM_FACES));
       newFriend = edge.getNeighbor(face);
+      shouldAddCell = canGenerateLandAt(newFriend);
       numAttemptsLeft --;
-    } while (numAttemptsLeft > 0 && (newFriend == null || newFriend.myCountry != null));
+    } while (numAttemptsLeft > 0 && !shouldAddCell);
 
-    if (newFriend != null && newFriend.myCountry == null) {
+    if (shouldAddCell) {
       countries[i].addCell(newFriend);
     }
   }

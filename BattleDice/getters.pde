@@ -14,10 +14,79 @@ Cell getCell(int col, int row) {
 }
 Cell getRandomEmptyCell() {
   Cell ret;
+  boolean shouldUseCell = false;
+  int numAttemptsLeft = 100;
   do {
     ret = getCell(floor(random(gridCells.length)), floor(random(gridCells[0].length)));
-  } while (ret == null || ret.myCountry != null);
+    shouldUseCell = canGenerateLandAt(ret);
+    numAttemptsLeft--;
+  } while (numAttemptsLeft > 0 && !shouldUseCell);
+  if (shouldUseCell) {
+    return ret;
+  }
+  while (ret == null || ret.myCountry != null) {
+    ret = getCell(floor(random(gridCells.length)), floor(random(gridCells[0].length)));
+  }
   return ret;
+}
+
+boolean canGenerateLandAt(Cell cell) {
+  if (cell == null || cell.myCountry != null) {
+    return false;
+  }
+  return random(1) < getLandGenerationChance(cell);
+}
+
+float getLandGenerationChance(Cell cell) {
+  int distanceFromEdge = min(
+    min(cell.gridPos.x, GRID_WIDTH - 1 - cell.gridPos.x),
+    min(cell.gridPos.y, GRID_HEIGHT - 1 - cell.gridPos.y)
+  );
+  int stepsNearEdge = EDGE_LAND_AVOIDANCE_DISTANCE - distanceFromEdge;
+  if (stepsNearEdge <= 0) {
+    return 1;
+  }
+  return pow(EDGE_LAND_GENERATION_CHANCE_PER_STEP, stepsNearEdge);
+}
+
+boolean canCountryHoldStartingDice(Country country) {
+  return country.cells.size() >= NUM_STARTING_DICE_PER_TEAM;
+}
+
+int getCountryDistance(Country from, Country _to) {
+  if (from == null || _to == null) {
+    return Integer.MAX_VALUE;
+  }
+  if (from.ID == _to.ID) {
+    return 0;
+  }
+
+  Set<Integer> visited = new HashSet<Integer>();
+  ArrayList<Country> frontier = new ArrayList<Country>();
+  frontier.add(from);
+  visited.add(from.ID);
+  int distance = 0;
+
+  while (frontier.size() > 0) {
+    ArrayList<Country> nextFrontier = new ArrayList<Country>();
+    distance++;
+    for (int i=0; i<frontier.size(); i++) {
+      Country country = frontier.get(i);
+      for (int n=0; n<country.neighbors.length; n++) {
+        Country neighbor = country.neighbors[n];
+        if (neighbor.ID == _to.ID) {
+          return distance;
+        }
+        if (!visited.contains(neighbor.ID)) {
+          visited.add(neighbor.ID);
+          nextFrontier.add(neighbor);
+        }
+      }
+    }
+    frontier = nextFrontier;
+  }
+
+  return Integer.MAX_VALUE;
 }
 
 Cell getPlayableCellByScreenPos(float x, float y) {
@@ -162,9 +231,16 @@ Quality isCurrentGridLayoutGood() {
   // Neighboring enemies
   for (int i=0; i<countries.length; i++) {
     if (countries[i].myTeamIndex > -1) {
-      for (int c = 0; c < countries[i].neighbors.length; c++) {
-        if (countries[i].neighbors[c].myTeamIndex > -1) {
-          println("= Neighboring enemies");
+      if (!canCountryHoldStartingDice(countries[i])) {
+        println("= Starting country too small");
+        return Quality.BAD;
+      }
+      for (int c = i + 1; c < countries.length; c++) {
+        if (
+          countries[c].myTeamIndex > -1
+          && getCountryDistance(countries[i], countries[c]) < STARTING_COUNTRY_MIN_DISTANCE
+        ) {
+          println("= Starting countries too close");
           return Quality.BAD;
         }
       }

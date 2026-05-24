@@ -5,6 +5,8 @@ final float BATTLE_PAIR_DELAY = 0.25;
 final float BATTLE_PAIR_DURATION = 0.14;
 final float BATTLE_WIN_FLASH_DURATION = 1.4;
 final float BATTLE_UNDERDOG_BANNER_DURATION = 1.5;
+final float BATTLE_SUPER_UNDERDOG_BANNER_DURATION = 3.0;
+final float BATTLE_SUPER_UNDERDOG_CHANCE = 0.15;
 final float BATTLE_BASH_WIND_DURATION = 0.35;
 final float BATTLE_BASH_SLAM_DURATION = 0.16;
 final float BATTLE_BASH_RECOIL_DURATION = 0.12;
@@ -106,7 +108,7 @@ boolean isBattleFlashTime(float elapsed) {
 }
 
 float currentBattleResolutionTime() {
-  return battleResolutionTime + (isUnderdogBattleVictory() ? BATTLE_UNDERDOG_BANNER_DURATION : 0);
+  return battleResolutionTime + getUnderdogBattleBannerDuration();
 }
 
 boolean isUnderdogBattleVictory() {
@@ -115,6 +117,24 @@ boolean isUnderdogBattleVictory() {
     return attackDice.length < defendDice.length;
   }
   return defendDice.length < attackDice.length;
+}
+
+boolean isSuperUnderdogBattleVictory() {
+  return isUnderdogBattleVictory() && getWinningBattleChance() < BATTLE_SUPER_UNDERDOG_CHANCE;
+}
+
+float getWinningBattleChance() {
+  float attackWinChance = getWinChance(attackDice.length, defendDice.length);
+  return attackSum > defendSum ? attackWinChance : 1 - attackWinChance;
+}
+
+float getUnderdogBattleBannerDuration() {
+  if (!isUnderdogBattleVictory()) {
+    return 0;
+  }
+  return isSuperUnderdogBattleVictory()
+    ? BATTLE_SUPER_UNDERDOG_BANNER_DURATION
+    : BATTLE_UNDERDOG_BANNER_DURATION;
 }
 
 float battleBashStartTime() {
@@ -237,29 +257,38 @@ void drawUnderdogVictoryBanner(float elapsed) {
     return;
   }
 
+  boolean isSuperUnderdog = isSuperUnderdogBattleVictory();
+  float bannerDuration = getUnderdogBattleBannerDuration();
   float bannerElapsed = elapsed - battleResolutionTime;
   float fadeIn = constrain(bannerElapsed / 0.18, 0, 1);
-  float fadeOut = constrain((BATTLE_UNDERDOG_BANNER_DURATION - bannerElapsed) / 0.25, 0, 1);
+  float fadeOut = constrain((bannerDuration - bannerElapsed) / 0.25, 0, 1);
   float alphaValue = 255 * min(fadeIn, fadeOut);
   float y = height / 2 - 138;
+  float bannerWidth = isSuperUnderdog ? 680 : 500;
+  float bannerHeight = isSuperUnderdog ? 76 : 68;
+  float bannerBrightness = isSuperUnderdog ? sinRange(currTime * 12, 170, 255) : 255;
+  String bannerText = isSuperUnderdog ? "SUPER UNDERDOG VICTORY!!" : "UNDERDOG VICTORY!";
 
   pushStyle();
   rectMode(CENTER);
   textAlign(CENTER, CENTER);
-  textSize(42);
+  textSize(isSuperUnderdog ? 40 : 42);
   noStroke();
   fill(0, alphaValue * 0.62);
-  rect(width / 2 + 4, y + 5, 500, 68, 6);
-  fill(42, 190, 255, alphaValue);
-  rect(width / 2, y, 500, 68, 6);
+  rect(width / 2 + 4, y + 5, bannerWidth, bannerHeight, 6);
+  int winningUnderdogTeamIndex = attackSum > defendSum
+    ? attackingCountry.myTeamIndex
+    : defendingCountry.myTeamIndex;
+  fill(teamHue(winningUnderdogTeamIndex), 122, bannerBrightness, alphaValue);
+  rect(width / 2, y, bannerWidth, bannerHeight, 6);
   stroke(255, alphaValue * 0.8);
   strokeWeight(2);
   noFill();
-  rect(width / 2, y, 492, 60, 6);
+  rect(width / 2, y, bannerWidth - 8, bannerHeight - 8, 6);
   fill(0, alphaValue * 0.72);
-  text("UNDERDOG VICTORY!", width / 2 + 2, y + 4);
+  text(bannerText, width / 2 + 2, y + 4);
   fill(255, alphaValue);
-  text("UNDERDOG VICTORY!", width / 2, y);
+  text(bannerText, width / 2, y);
   popStyle();
 }
 

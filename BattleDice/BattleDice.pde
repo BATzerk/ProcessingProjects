@@ -10,18 +10,22 @@
  * - Add lightweight verification for odds, legal moves, capture, and migration.
  */
 
+// Tweakables
+final int NUM_STARTING_DICE_PER_TEAM = 6;
+final int MIN_CELLS_PER_COUNTRY = 5;
+final int MAX_CELLS_PER_COUNTRY = 12;
+final int GRID_WIDTH = 24;
+final int GRID_HEIGHT = 18;
+final int EDGE_LAND_AVOIDANCE_DISTANCE = 2;
+final float EDGE_LAND_GENERATION_CHANCE_PER_STEP = 0.4;
+final int STARTING_COUNTRY_MIN_DISTANCE = 3;
 // Constants
 final boolean MOVIE_MODE = false;
 final boolean RUN_STARTUP_RULE_CHECKS = true;
 int NUM_PLAYERS = 4;
 final int HUMAN_PLAYER_INDEX = 0;
 final int NUM_FACES = 6; // it's hip to be hex.
-final int NUM_STARTING_DICE_PER_TEAM = 6;
-final int MIN_CELLS_PER_COUNTRY = 6;
-final int MAX_CELLS_PER_COUNTRY = 14;
 final int DICE_SIDES = 6;
-final int GRID_WIDTH = 24;
-final int GRID_HEIGHT = 18;
 final float NORMAL_TIME_SCALE = 1;
 final float FAST_FORWARD_TIME_SCALE = 6;
 final float SELECTED_COUNTRY_RAISE = -7;
