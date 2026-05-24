@@ -265,14 +265,14 @@ void drawUnderdogVictoryBanner(float elapsed) {
   float alphaValue = 255 * min(fadeIn, fadeOut);
   float y = height / 2 - 138;
   float bannerWidth = isSuperUnderdog ? 680 : 500;
-  float bannerHeight = isSuperUnderdog ? 76 : 68;
+  float bannerHeight = isSuperUnderdog ? 104 : 68;
   float bannerBrightness = isSuperUnderdog ? sinRange(currTime * 12, 170, 255) : 255;
   String bannerText = isSuperUnderdog ? "SUPER UNDERDOG VICTORY!!" : "UNDERDOG VICTORY!";
+  String probabilityText = round(getWinningBattleChance() * 100) + "% probability!";
 
   pushStyle();
   rectMode(CENTER);
   textAlign(CENTER, CENTER);
-  textSize(isSuperUnderdog ? 40 : 42);
   noStroke();
   fill(0, alphaValue * 0.62);
   rect(width / 2 + 4, y + 5, bannerWidth, bannerHeight, 6);
@@ -286,9 +286,21 @@ void drawUnderdogVictoryBanner(float elapsed) {
   noFill();
   rect(width / 2, y, bannerWidth - 8, bannerHeight - 8, 6);
   fill(0, alphaValue * 0.72);
-  text(bannerText, width / 2 + 2, y + 4);
+  textSize(isSuperUnderdog ? 40 : 42);
+  text(bannerText, width / 2 + 2, y + (isSuperUnderdog ? -12 : 4));
+  if (isSuperUnderdog) {
+    textSize(24);
+    fill(32, alphaValue * 0.8);
+    text(probabilityText, width / 2 + 2, y + 27);
+  }
   fill(255, alphaValue);
-  text(bannerText, width / 2, y);
+  textSize(isSuperUnderdog ? 40 : 42);
+  text(bannerText, width / 2, y + (isSuperUnderdog ? -16 : 0));
+  if (isSuperUnderdog) {
+    textSize(24);
+    fill(38, 210, 255, alphaValue);
+    text(probabilityText, width / 2, y + 23);
+  }
   popStyle();
 }
 

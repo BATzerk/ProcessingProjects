@@ -7,7 +7,7 @@ void startNewGame() {
     setGameMode(GAME_MODE_HUMAN_TURN);
     eliminated = new boolean[NUM_PLAYERS]; // assuming this fills false
     botPlayers = new AI[NUM_PLAYERS]; // assuming this fills false
-    setCurrPlayerIndex(0);
+    setCurrPlayerIndex(STARTING_PLAYER_INDEX);
     turnCount = 1;
     setSelectedCountryIndex(-1);
     resetPlayerLuckiness();
@@ -74,6 +74,7 @@ void startNewGame() {
       botPlayers[i] = createAIForTeam(i);
     }
   }
+  resetDiceHistory();
   if (setupHumanCount > 0) {
     statusText = "Click one of your countries with 2+ dice.";
   }
@@ -233,6 +234,7 @@ void startNextPlayerTurn() {
     }
   }
   turnCount ++;
+  recordDiceHistorySample();
   statusText = isCurrentPlayerHuman()
     ? "Your turn. Click one of your countries with 2+ dice, or press ENTER to pass."
     : "";

@@ -28,6 +28,7 @@ void enterMigrationMode() {
 
 void enterGameOverMode() {
   setGameMode(GAME_MODE_GAME_OVER);
+  setDiceHistoryGraphVisible(true);
 }
 
 boolean isPlayerSelectScreen() {

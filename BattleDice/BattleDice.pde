@@ -12,11 +12,13 @@
 
 // Tweakables
 final boolean SKIP_MENU_SCREEN = true;//false;
+final int STARTING_PLAYER_INDEX = 1; // Temp testing: choose which player starts the game.
 final int NUM_STARTING_DICE_PER_TEAM = 6;
 final int MIN_CELLS_PER_COUNTRY = 5;
 final int MAX_CELLS_PER_COUNTRY = 12;
 final int GRID_WIDTH = 24;
 final int GRID_HEIGHT = 18;
+
 final int EDGE_LAND_AVOIDANCE_DISTANCE = 2;
 final float EDGE_LAND_GENERATION_CHANCE_PER_STEP = 0.4;
 final int STARTING_COUNTRY_MIN_DISTANCE = 3;
@@ -164,6 +166,7 @@ void draw() {
 
   drawCurrentPlayerHeader();
   drawEndTurnButton();
+  drawDiceHistoryGraph();
 }
 
 void updateBoardLayout() {

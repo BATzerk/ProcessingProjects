@@ -18,6 +18,9 @@ void keyPressed() {
   else if (key == 'd') {
     doHideBattleDice = !doHideBattleDice;
   }
+  else if (key == 's' || key == 'S') {
+    toggleDiceHistoryGraph();
+  }
   else if (key == 'a') {
     if (botPlayers[currPlayerIndex] == null) {
       botPlayers[currPlayerIndex] = createAIForTeam(currPlayerIndex);

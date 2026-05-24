@@ -62,7 +62,7 @@ class AI
         Country defender = attacker.neighbors[n];
         if (canCountryAttackOther(attacker, defender)) {
           float score = scoreAttack(attacker, defender);
-          if (bestAttack == null || score > bestAttack.score) {
+          if (isBetterCandidate(score, bestAttack)) {
             bestAttack = new AIMove(attacker, defender, score, AI_MOVE_ATTACK);
           }
         }
@@ -71,11 +71,14 @@ class AI
         Country defender = countries[n];
         if (canTeamMigrateDice(myTeamIndex, attacker, defender)) {
           float score = scoreMigration(attacker, defender);
-          if (bestMigration == null || score > bestMigration.score) {
+          if (isBetterCandidate(score, bestMigration)) {
             bestMigration = new AIMove(attacker, defender, score, AI_MOVE_MIGRATE);
           }
         }
       }
+    }
+    if (difficulty == AI_DIFFICULTY_BEGINNER) {
+      return getBeginnerMove(bestAttack, bestMigration);
     }
     if (bestAttack != null && bestAttack.score >= getMinAttackScore()) {
       return bestAttack;
@@ -84,6 +87,26 @@ class AI
       return bestMigration;
     }
     return null;
+  }
+
+  boolean isBetterCandidate(float score, AIMove currentMove) {
+    if (currentMove == null) {
+      return true;
+    }
+    if (difficulty == AI_DIFFICULTY_BEGINNER) {
+      return score < currentMove.score;
+    }
+    return score > currentMove.score;
+  }
+
+  AIMove getBeginnerMove(AIMove worstAttack, AIMove worstMigration) {
+    if (worstAttack != null && random(1) < 0.8) {
+      return worstAttack;
+    }
+    if (worstMigration != null) {
+      return worstMigration;
+    }
+    return worstAttack;
   }
 
   float scoreAttack(Country attacker, Country defender) {
@@ -113,6 +136,7 @@ class AI
 
   float getMinAttackScore() {
     switch (difficulty) {
+      case AI_DIFFICULTY_BEGINNER: return -999;
       case AI_DIFFICULTY_EASY: return 74;
       case AI_DIFFICULTY_HARD: return 54;
       default: return AI_MIN_ATTACK_SCORE;
@@ -121,6 +145,7 @@ class AI
 
   float getMinMigrationScore() {
     switch (difficulty) {
+      case AI_DIFFICULTY_BEGINNER: return -999;
       case AI_DIFFICULTY_EASY: return 34;
       case AI_DIFFICULTY_HARD: return 12;
       default: return AI_MIN_MIGRATION_SCORE;
@@ -129,6 +154,7 @@ class AI
 
   float getExposurePenalty() {
     switch (difficulty) {
+      case AI_DIFFICULTY_BEGINNER: return 0;
       case AI_DIFFICULTY_EASY: return 4;
       case AI_DIFFICULTY_HARD: return 16;
       default: return AI_EXPOSURE_PENALTY;
@@ -137,6 +163,7 @@ class AI
 
   float getRandomness() {
     switch (difficulty) {
+      case AI_DIFFICULTY_BEGINNER: return 80;
       case AI_DIFFICULTY_EASY: return 24;
       case AI_DIFFICULTY_HARD: return 1;
       default: return AI_RANDOMNESS;

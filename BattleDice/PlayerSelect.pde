@@ -1,7 +1,20 @@
 // ======== PLAYER SELECT ========
+final int AI_DIFFICULTY_BEGINNER = -1;
 final int AI_DIFFICULTY_EASY = 0;
 final int AI_DIFFICULTY_NORMAL = 1;
 final int AI_DIFFICULTY_HARD = 2;
+int[] AI_DIFFICULTY_VALUES = {
+  AI_DIFFICULTY_BEGINNER,
+  AI_DIFFICULTY_EASY,
+  AI_DIFFICULTY_NORMAL,
+  AI_DIFFICULTY_HARD
+};
+String[] AI_DIFFICULTY_LABELS = {
+  "Beginner",
+  "Easy",
+  "Normal",
+  "Hard"
+};
 final int MAX_PLAYERS = 8;
 
 int setupHumanCount = 1;
@@ -12,6 +25,8 @@ final float PLAYER_SELECT_PANEL_WIDTH = 430;
 final float PLAYER_SELECT_PANEL_HEIGHT = 410;
 final float PLAYER_SELECT_BUTTON_HEIGHT = 42;
 final float PLAYER_SELECT_BUTTON_RADIUS = 6;
+final float PLAYER_SELECT_DIFFICULTY_BUTTON_WIDTH = 88;
+final float PLAYER_SELECT_DIFFICULTY_BUTTON_GAP = 9;
 
 void drawPlayerSelectScreen() {
   drawPlayerSelectBackground();
@@ -42,9 +57,9 @@ void drawPlayerSelectScreen() {
   fill(255, 220);
   textSize(18);
   text("AI Difficulty", width / 2, panelY + 226);
-  drawDifficultyButton(AI_DIFFICULTY_EASY, "Easy", panelX + 48, panelY + 250, 104, PLAYER_SELECT_BUTTON_HEIGHT);
-  drawDifficultyButton(AI_DIFFICULTY_NORMAL, "Normal", panelX + 163, panelY + 250, 104, PLAYER_SELECT_BUTTON_HEIGHT);
-  drawDifficultyButton(AI_DIFFICULTY_HARD, "Hard", panelX + 278, panelY + 250, 104, PLAYER_SELECT_BUTTON_HEIGHT);
+  for (int i=0; i<AI_DIFFICULTY_VALUES.length; i++) {
+    drawDifficultyButton(AI_DIFFICULTY_VALUES[i], AI_DIFFICULTY_LABELS[i], getDifficultyButtonX(panelX, i), panelY + 250, PLAYER_SELECT_DIFFICULTY_BUTTON_WIDTH, PLAYER_SELECT_BUTTON_HEIGHT);
+  }
 
   drawPlayerSelectSwatches(width / 2, panelY + 322);
   fill(255, 230);
@@ -89,6 +104,13 @@ void drawDifficultyButton(int difficulty, String label, float x, float y, float 
   drawPlayerSelectButton(label, x, y, w, h, setupAIDifficulty == difficulty);
 }
 
+float getDifficultyButtonX(float panelX, int index) {
+  float totalWidth = AI_DIFFICULTY_VALUES.length * PLAYER_SELECT_DIFFICULTY_BUTTON_WIDTH
+    + (AI_DIFFICULTY_VALUES.length - 1) * PLAYER_SELECT_DIFFICULTY_BUTTON_GAP;
+  return panelX + (PLAYER_SELECT_PANEL_WIDTH - totalWidth) / 2
+    + index * (PLAYER_SELECT_DIFFICULTY_BUTTON_WIDTH + PLAYER_SELECT_DIFFICULTY_BUTTON_GAP);
+}
+
 void drawPlayerSelectButton(String label, float x, float y, float w, float h, boolean isSelected) {
   boolean isHovered = isMouseOverRect(x, y, w, h);
   noStroke();
@@ -127,14 +149,15 @@ void handlePlayerSelectMousePressed() {
     changeSetupAICount(-1);
   } else if (isMouseOverRect(panelX + 347, panelY + 164, 46, PLAYER_SELECT_BUTTON_HEIGHT)) {
     changeSetupAICount(1);
-  } else if (isMouseOverRect(panelX + 48, panelY + 250, 104, PLAYER_SELECT_BUTTON_HEIGHT)) {
-    setAIDifficulty(AI_DIFFICULTY_EASY);
-  } else if (isMouseOverRect(panelX + 163, panelY + 250, 104, PLAYER_SELECT_BUTTON_HEIGHT)) {
-    setAIDifficulty(AI_DIFFICULTY_NORMAL);
-  } else if (isMouseOverRect(panelX + 278, panelY + 250, 104, PLAYER_SELECT_BUTTON_HEIGHT)) {
-    setAIDifficulty(AI_DIFFICULTY_HARD);
   } else if (isMouseOverRect(panelX + 110, panelY + 368, 210, PLAYER_SELECT_BUTTON_HEIGHT)) {
     startGameFromPlayerSelect();
+    return;
+  }
+  for (int i=0; i<AI_DIFFICULTY_VALUES.length; i++) {
+    if (isMouseOverRect(getDifficultyButtonX(panelX, i), panelY + 250, PLAYER_SELECT_DIFFICULTY_BUTTON_WIDTH, PLAYER_SELECT_BUTTON_HEIGHT)) {
+      setAIDifficulty(AI_DIFFICULTY_VALUES[i]);
+      return;
+    }
   }
 }
 
@@ -192,6 +215,10 @@ AI createAIForTeam(int teamIndex) {
 }
 
 boolean handleAIDifficultyKeyPressed() {
+  if (key == '0' || key == 'b' || key == 'B') {
+    setAIDifficulty(AI_DIFFICULTY_BEGINNER);
+    return true;
+  }
   if (key == '1') {
     setAIDifficulty(AI_DIFFICULTY_EASY);
     return true;
@@ -221,6 +248,7 @@ void setAIDifficulty(int difficulty) {
 
 String getAIDifficultyName(int difficulty) {
   switch (difficulty) {
+    case AI_DIFFICULTY_BEGINNER: return "Beginner";
     case AI_DIFFICULTY_EASY: return "Easy";
     case AI_DIFFICULTY_HARD: return "Hard";
     default: return "Normal";
