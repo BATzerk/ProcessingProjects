@@ -1,0 +1,39 @@
+void setGameMode(int mode) {
+  gameMode = mode;
+}
+
+void enterBattleMode() {
+  setGameMode(GAME_MODE_BATTLE);
+}
+
+void enterMigrationMode() {
+  setGameMode(GAME_MODE_MIGRATION);
+}
+
+void enterGameOverMode() {
+  setGameMode(GAME_MODE_GAME_OVER);
+}
+
+boolean isPlayerSelectScreen() {
+  return gameMode == GAME_MODE_PLAYER_SELECT;
+}
+
+boolean isAITurnMode() {
+  return gameMode == GAME_MODE_AI_TURN;
+}
+
+boolean isBattleMode() {
+  return gameMode == GAME_MODE_BATTLE;
+}
+
+boolean isMigrationMode() {
+  return gameMode == GAME_MODE_MIGRATION;
+}
+
+boolean isGameOver() {
+  return gameMode == GAME_MODE_GAME_OVER;
+}
+
+void setCurrentTurnMode() {
+  setGameMode(isCurrentPlayerHuman() ? GAME_MODE_HUMAN_TURN : GAME_MODE_AI_TURN);
+}

@@ -34,7 +34,7 @@ void setupBattle(Country offense, Country defense) {
 
   attackingCountry = offense;
   defendingCountry = defense;
-  isBattleMode = true;
+  enterBattleMode();
   updateCountryDisplayOffsets();
   timeWhenStartedRolling = currTime;
   attackDice = new int[offense.myDice];
@@ -146,7 +146,7 @@ int updateBattleDiceValues(BattleDie[] dice, int[] values, float elapsed) {
 }
 
 void finishBattle() {
-  isBattleMode = false;
+  setCurrentTurnMode();
   boolean attackerWon = attackSum > defendSum;
   recordBattleLuckiness(attackingCountry, defendingCountry, attackerWon);
   if (attackerWon) {

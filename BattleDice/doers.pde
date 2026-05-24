@@ -4,24 +4,22 @@
 void startNewGame() {
   // ---- Reset Gameplay Variables ----
   {
-    isGameOver = false;
+    setGameMode(GAME_MODE_HUMAN_TURN);
     eliminated = new boolean[NUM_PLAYERS]; // assuming this fills false
     botPlayers = new AI[NUM_PLAYERS]; // assuming this fills false
     setCurrPlayerIndex(0);
     turnCount = 1;
     setSelectedCountryIndex(-1);
     resetPlayerLuckiness();
-    isBattleMode = false;
-    isAIExecutingTurn = false;
     attackingCountry = null;
     defendingCountry = null;
-    isMigrationMode = false;
     migrationFromCountry = null;
     migrationToCountry = null;
     migrationDiceCount = 0;
     migrationDieStartPositions = null;
     migrationDieEndPositions = null;
     statusText = "";
+    clearScheduledAction();
     timeScale = NORMAL_TIME_SCALE;
     doHideBattleDice = false;
   }
@@ -156,14 +154,16 @@ void setCurrPlayerIndex(int index) {
   currPlayerIndex = index;
   currPlayerName = getPlayerName(currPlayerIndex);
   setSelectedCountryIndex(-1);
-  isBattleMode = false;
-  isAIExecutingTurn = false;
 }
 boolean isCurrentPlayerHuman() {
   return !MOVIE_MODE && botPlayers[currPlayerIndex] == null;
 }
 void startAITurnIfNeeded() {
-  if (!isGameOver && botPlayers[currPlayerIndex] != null) {
+  if (isGameOver()) {
+    return;
+  }
+  setCurrentTurnMode();
+  if (botPlayers[currPlayerIndex] != null) {
     botPlayers[currPlayerIndex].executeNextStep();
   }
 }
@@ -172,7 +172,7 @@ void setSelectedCountryIndex(int index) {
 }
 
 boolean isCountryInCurrentBattle(int countryIndex) {
-  return isBattleMode
+  return isBattleMode()
     && (
       (attackingCountry != null && attackingCountry.ID == countryIndex)
       || (defendingCountry != null && defendingCountry.ID == countryIndex)
@@ -184,7 +184,7 @@ boolean isCountryRaisedForDrawing(int countryIndex) {
 }
 
 int getVisibleCountryDiceCount(Country country) {
-  if (isMigrationMode && migrationFromCountry != null && country.ID == migrationFromCountry.ID) {
+  if (isMigrationMode() && migrationFromCountry != null && country.ID == migrationFromCountry.ID) {
     return 1;
   }
   return country.myDice;
@@ -251,7 +251,7 @@ void startMigrationDice(Country from, Country _to) {
   migrationDiceCount = from.myDice - 1;
   migrationFromCountry = from;
   migrationToCountry = _to;
-  isMigrationMode = true;
+  enterMigrationMode();
   timeWhenStartedMigration = currTime;
   setSelectedCountryIndex(-1);
   updateCountryDisplayOffsets();
@@ -273,7 +273,7 @@ float currentMigrationDuration() {
 }
 
 void finishMigrationDice() {
-  if (!isMigrationMode) {
+  if (!isMigrationMode()) {
     return;
   }
 
@@ -282,7 +282,6 @@ void finishMigrationDice() {
   if (isCurrentPlayerHuman()) {
     statusText = "Moved " + migrationDiceCount + " dice. Turn ended.";
   }
-  isMigrationMode = false;
   migrationFromCountry = null;
   migrationToCountry = null;
   migrationDiceCount = 0;
@@ -292,7 +291,7 @@ void finishMigrationDice() {
 }
 
 void drawMigrationDice() {
-  if (!isMigrationMode || migrationDieStartPositions == null || migrationDieEndPositions == null) {
+  if (!isMigrationMode() || migrationDieStartPositions == null || migrationDieEndPositions == null) {
     return;
   }
 
@@ -335,7 +334,7 @@ void moveIntoCountry(Country from, Country _to) {
         return;
       }
     }
-    println(getPlayerName(victimPlayerIndex) + " eliminiated.");
+    println(getPlayerName(victimPlayerIndex) + " eliminated.");
     statusText = getPlayerName(victimPlayerIndex) + " eliminated.";
     eliminated[victimPlayerIndex] = true;
 
@@ -346,13 +345,13 @@ void moveIntoCountry(Country from, Country _to) {
       }
     }
     if (playersRemaining == 1) {
-      isGameOver = true;
+      enterGameOverMode();
       statusText = currPlayerName + " wins. Press CTRL+R for a new game.";
       for (int i = 0; i < countries.length; i++) {
         countries[i].myDice = countries[i].cells.size();
       }
       if (MOVIE_MODE) {
-        timeWhenStartNextGame = currTime + 3 * timeScale;
+        scheduleAction(SCHEDULED_ACTION_MOVIE_RESTART, 3 * timeScale);
       }
     }
   }

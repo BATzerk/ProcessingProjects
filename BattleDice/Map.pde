@@ -144,15 +144,15 @@ class Country
   color myColor() {
     boolean isInDanger =
       isCurrentPlayerHuman()
-      && !isBattleMode
-      && !isGameOver
+      && !isBattleMode()
+      && !isGameOver()
       && selectedCountryIndex > -1
       && countries[selectedCountryIndex].myTeamIndex != this.myTeamIndex
       && isNeighboring(selectedCountryIndex);
     boolean canReceiveMigration =
       isCurrentPlayerHuman()
-      && !isBattleMode
-      && !isGameOver
+      && !isBattleMode()
+      && !isGameOver()
       && selectedCountryIndex > -1
       && canMigrateDice(countries[selectedCountryIndex], this);
 
@@ -268,8 +268,8 @@ class Country
   }
   boolean isAttackableFromSelection() {
     return isCurrentPlayerHuman()
-      && !isBattleMode
-      && !isGameOver
+      && !isBattleMode()
+      && !isGameOver()
       && selectedCountryIndex > -1
       && canActOnCountry(countries[selectedCountryIndex], this);
   }

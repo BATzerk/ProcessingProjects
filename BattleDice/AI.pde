@@ -32,11 +32,11 @@ class AI
   }
 
   void executeNextStep() {
-    isAIExecutingTurn = true;
+    setGameMode(GAME_MODE_AI_TURN);
 
     AIMove bestMove = getBestMove();
 
-    if (bestMove == null || isGameOver) {
+    if (bestMove == null || isGameOver()) {
       startNextPlayerTurn();
       return;
     }
@@ -49,8 +49,7 @@ class AI
       countryAttackOther(bestMove.attacker, bestMove.defender);
     }
   
-    // Plan when to do next step. NOTE: FRAGILE! Timer runs concurrently with battle timer. IDEALLY, we'd only have ONE timer. It's "timeWhenNextStep", and when it's time, it'd call a function that handles what to do.
-    timeWhenNextAIStep = currTime + (isBattleMode ? 3.0 : 0.5);
+    scheduleAction(SCHEDULED_ACTION_AI_STEP, isBattleMode() ? 3.0 : 0.5);
   }
 
   AIMove getBestMove() {
@@ -70,7 +69,7 @@ class AI
       }
       for (int n=0; n<countries.length; n++) {
         Country defender = countries[n];
-        if (canMigrateDice(attacker, defender)) {
+        if (canTeamMigrateDice(myTeamIndex, attacker, defender)) {
           float score = scoreMigration(attacker, defender);
           if (bestMigration == null || score > bestMigration.score) {
             bestMigration = new AIMove(attacker, defender, score, AI_MOVE_MIGRATE);
@@ -284,14 +283,8 @@ class AI
     return list.toArray(new Country[list.size()]);
   }
   boolean canCountryAttackOther(Country attacker, Country defender) {
-    // Can't attack same team.
-    if (attacker.myTeamIndex == defender.myTeamIndex) { return false; }
-    // Not enough dice to even attack, man.
-    if (attacker.myDice <= 1) { return false; }
-    // So few dice it'd be a guaranteed loss? Return false.
-    if (attacker.myDice*6 <= defender.myDice) { return false; }
-    // Sure, why not!
-    return true;
+    return canTeamAttackCountry(myTeamIndex, attacker, defender)
+      && attacker.myDice * DICE_SIDES > defender.myDice;
   }
   boolean canDiceAttackCountry(int attackDice, Country defender) {
     if (defender.myTeamIndex == myTeamIndex) { return false; }

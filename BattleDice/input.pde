@@ -1,7 +1,7 @@
 
 
 void keyPressed() {
-  if (isPlayerSelectScreen) {
+  if (isPlayerSelectScreen()) {
     handlePlayerSelectKeyPressed();
     return;
   }
@@ -15,12 +15,12 @@ void keyPressed() {
   else if (key == 'a') {
     if (botPlayers[currPlayerIndex] == null) {
       botPlayers[currPlayerIndex] = createAIForTeam(currPlayerIndex);
-      if (!isBattleMode && !isGameOver) {
+      if (!isBattleMode() && !isGameOver()) {
         botPlayers[currPlayerIndex].executeNextStep();
       }
     } else {
-      isAIExecutingTurn = false;
       botPlayers[currPlayerIndex] = null;
+      setCurrentTurnMode();
       statusText = getPlayerName(currPlayerIndex) + " is now human-controlled.";
     }
   }
@@ -30,7 +30,7 @@ void keyPressed() {
   else if (key == 'f' || key == 'F') {
     timeScale = FAST_FORWARD_TIME_SCALE;
   }
-  else if (keyCode == ENTER && !isBattleMode && !isMigrationMode && !isGameOver && isCurrentPlayerHuman()) {
+  else if (keyCode == ENTER && !isBattleMode() && !isMigrationMode() && !isGameOver() && isCurrentPlayerHuman()) {
     startNextPlayerTurn();
   }
 }
@@ -43,12 +43,12 @@ void keyReleased() {
 
 
 void mousePressed() {
-  if (isPlayerSelectScreen) {
+  if (isPlayerSelectScreen()) {
     handlePlayerSelectMousePressed();
     return;
   }
 
-  if (!isCurrentPlayerHuman() || isBattleMode || isMigrationMode || isGameOver) {
+  if (!isCurrentPlayerHuman() || isBattleMode() || isMigrationMode() || isGameOver()) {
     return;
   }
 

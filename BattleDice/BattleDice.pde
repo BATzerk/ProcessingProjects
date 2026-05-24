@@ -3,14 +3,16 @@
 // Based on the game "Battle Dice" from 20 Games to Play with Your Mates
 
 /**
- * TODO
- * - Smarter AI
- * - Save country images and tint
- * - Refactor loop to handle higher/more granular speeds
+ * HOUSECLEANING TODO
+ * - Move pure game rules into a small, testable rules layer.
+ * - Keep render code out of Country where possible.
+ * - Replace ad-hoc timers with a single action scheduler.
+ * - Add lightweight verification for odds, legal moves, capture, and migration.
  */
 
 // Constants
 final boolean MOVIE_MODE = false;
+final boolean RUN_STARTUP_RULE_CHECKS = true;
 int NUM_PLAYERS = 4;
 final int HUMAN_PLAYER_INDEX = 0;
 final int NUM_FACES = 6; // it's hip to be hex.
@@ -39,6 +41,15 @@ final int PLAYER_LUCK_DECIMALS = 1;
 final float MIGRATION_DURATION = 0.65;
 final float MIGRATION_DIE_STAGGER = 0.055;
 final float MIGRATION_DIE_ARC_HEIGHT = 42;
+final int GAME_MODE_PLAYER_SELECT = 0;
+final int GAME_MODE_HUMAN_TURN = 1;
+final int GAME_MODE_AI_TURN = 2;
+final int GAME_MODE_BATTLE = 3;
+final int GAME_MODE_MIGRATION = 4;
+final int GAME_MODE_GAME_OVER = 5;
+final int SCHEDULED_ACTION_NONE = 0;
+final int SCHEDULED_ACTION_AI_STEP = 1;
+final int SCHEDULED_ACTION_MOVIE_RESTART = 2;
 
 // Grid Properties
 float tileRadius = 22;
@@ -46,17 +57,20 @@ float hexRatio = 0.8457;
 PVector gridPos; // the TOP-left corner of the grid.
 Cell[][] gridCells;
 Country[] countries=new Country[0];
+float[][] diceSumOddsCache = new float[MAX_CELLS_PER_COUNTRY + 1][];
+float[][] winChanceCache = new float[MAX_CELLS_PER_COUNTRY + 1][MAX_CELLS_PER_COUNTRY + 1];
+boolean[][] winChanceCached = new boolean[MAX_CELLS_PER_COUNTRY + 1][MAX_CELLS_PER_COUNTRY + 1];
 
 // Game Loop
-boolean isGameOver = false;
+int gameMode = MOVIE_MODE ? GAME_MODE_AI_TURN : GAME_MODE_PLAYER_SELECT;
 int currPlayerIndex;
 boolean[] eliminated;
 String currPlayerName;
 boolean doHideBattleDice=false;
-boolean isAIExecutingTurn;
 AI[] botPlayers;
-float timeWhenNextAIStep;
 String statusText = "";
+int scheduledAction = SCHEDULED_ACTION_NONE;
+float timeWhenScheduledAction;
 // Time Variables
 float currTime; // in SECONDS.
 float timeScale = NORMAL_TIME_SCALE; // how fast currTime advances is scaled by this.
@@ -65,12 +79,9 @@ int pmillis; // previous millis.
 int turnCount;
 int selectedCountryIndex;
 
-boolean isBattleMode = false;
 Country attackingCountry, defendingCountry;
 int attackSum, defendSum;
 float timeWhenStartedRolling;
-float timeWhenStartNextGame;
-boolean isMigrationMode = false;
 Country migrationFromCountry, migrationToCountry;
 int migrationDiceCount;
 PVector[] migrationDieStartPositions;
@@ -85,6 +96,9 @@ void setup() {
   textAlign(CENTER, CENTER);
   // textFont(loadFont("AdobeDevanagari-Bold-48.vlw"));
   pmillis = millis();
+  if (RUN_STARTUP_RULE_CHECKS) {
+    runStartupRuleChecks();
+  }
   if (MOVIE_MODE) {
     startNewGame();
   }
@@ -99,11 +113,9 @@ void draw() {
   currTime += (millis()-pmillis) * 0.001 * timeScale;
   pmillis = millis();
   
-  if (MOVIE_MODE && isGameOver && currTime > timeWhenStartNextGame) {
-    startNewGame();
-  }
+  runDueScheduledAction();
 
-  if (isPlayerSelectScreen) {
+  if (isPlayerSelectScreen()) {
     drawPlayerSelectScreen();
     return;
   }
@@ -113,12 +125,12 @@ void draw() {
   drawAttackWinChanceTooltip();
   drawMigrationDice();
 
-  if (isMigrationMode && currTime - timeWhenStartedMigration > currentMigrationDuration()) {
+  if (isMigrationMode() && currTime - timeWhenStartedMigration > currentMigrationDuration()) {
     finishMigrationDice();
   }
 
   // ---- BATTLE MODE ----
-  if (isBattleMode) {
+  if (isBattleMode()) {
     float beenRollingFor = currTime - timeWhenStartedRolling;
     if (!doHideBattleDice) {
       showBattleDice();
@@ -128,12 +140,6 @@ void draw() {
     }
     if (beenRollingFor > currentBattleResolutionTime()) {
       finishBattle();
-    }
-  }
-
-  if (!isBattleMode && !isMigrationMode && isAIExecutingTurn && botPlayers[currPlayerIndex] != null) {
-    if (currTime > timeWhenNextAIStep) {
-      botPlayers[currPlayerIndex].executeNextStep();
     }
   }
 
@@ -190,7 +196,7 @@ void drawGridCells() {
 }
 
 void drawAttackWinChanceTooltip() {
-  if (!isCurrentPlayerHuman() || isBattleMode || isGameOver || selectedCountryIndex < 0) {
+  if (!isCurrentPlayerHuman() || isBattleMode() || isGameOver() || selectedCountryIndex < 0) {
     return;
   }
 
@@ -260,7 +266,7 @@ void drawCurrentPlayerHeader() {
   String helpText = isCurrentPlayerHuman()
     ? "Click your lit country, then a neighboring enemy, empty country, or connected own country with room. ENTER ends turn. Hold F to fast-forward. CTRL+R restarts."
     : currPlayerName + " is thinking...";
-  if (isGameOver) {
+  if (isGameOver()) {
     helpText = currPlayerName + " wins. Press CTRL+R for a new game.";
   } else if (statusText.length() > 0) {
     helpText = statusText;

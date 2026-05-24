@@ -4,7 +4,6 @@ final int AI_DIFFICULTY_NORMAL = 1;
 final int AI_DIFFICULTY_HARD = 2;
 final int MAX_PLAYERS = 8;
 
-boolean isPlayerSelectScreen = !MOVIE_MODE;
 int setupHumanCount = 1;
 int setupAICount = 3;
 int setupAIDifficulty = AI_DIFFICULTY_NORMAL;
@@ -174,7 +173,6 @@ void keepSetupPlayerCountsValid(boolean preferHumans) {
 
 void startGameFromPlayerSelect() {
   NUM_PLAYERS = getSetupPlayerCount();
-  isPlayerSelectScreen = false;
   startNewGame();
 }
 
