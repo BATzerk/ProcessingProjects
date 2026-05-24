@@ -4,13 +4,14 @@ final float BATTLE_GATHER_DURATION = 0.4;
 final float BATTLE_PAIR_DELAY = 0.25;
 final float BATTLE_PAIR_DURATION = 0.14;
 final float BATTLE_WIN_FLASH_DURATION = 1.4;
+final float BATTLE_UNDERDOG_BANNER_DURATION = 1.5;
 final float BATTLE_BASH_WIND_DURATION = 0.35;
 final float BATTLE_BASH_SLAM_DURATION = 0.16;
 final float BATTLE_BASH_RECOIL_DURATION = 0.12;
 final float BATTLE_BASH_VANISH_DURATION = 0.32;
 final float BATTLE_BASH_WIND_DISTANCE = 34;
 final float BATTLE_BASH_IMPACT_OVERLAP = 14;
-final float BATTLE_BASH_LOSER_KNOCKBACK = 25;
+final float BATTLE_BASH_LOSER_KNOCKBACK = 84;
 final float BATTLE_BASH_VANISH_SPEED = 92;
 final float BATTLE_BASH_VANISH_SPEED_RANDOM = 48;
 final float BATTLE_BASH_VANISH_DRIFT_RANDOM = 46;
@@ -19,6 +20,9 @@ final float BATTLE_CENTER_COLUMN_OFFSET = 44;
 final float BATTLE_SCORE_Y = 116;
 final float BATTLE_SCORE_RECT_PAD_X = 22;
 final float BATTLE_SCORE_RECT_PAD_Y = 8;
+final float BATTLE_DIM_ALPHA = 120;
+final float BATTLE_DIM_FADE_IN_DURATION = 0.18;
+final float BATTLE_DIM_FADE_OUT_DURATION = 0.28;
 BattleDie[] attackBattleDice, defendBattleDice;
 float battleResolutionTime;
 
@@ -84,8 +88,8 @@ BattleDie[] makeBattleDice(Country country, boolean isLeftSide) {
 }
 
 PVector getCountryDieScreenPos(Country country, int dieIndex) {
-  Cell cell = (Cell) country.cells.get(dieIndex);
-  return new PVector(gridPos.x + cell.screenPos.x, gridPos.y + cell.screenPos.y + country.displayOffsetY);
+  PVector diePos = country.dieScreenPos(dieIndex);
+  return new PVector(gridPos.x + diePos.x, gridPos.y + diePos.y + country.displayOffsetY);
 }
 
 float easeInOut(float t) {
@@ -99,6 +103,18 @@ float battlePairStartTime(int index) {
 
 boolean isBattleFlashTime(float elapsed) {
   return elapsed >= battleResolutionTime - BATTLE_WIN_FLASH_DURATION;
+}
+
+float currentBattleResolutionTime() {
+  return battleResolutionTime + (isUnderdogBattleVictory() ? BATTLE_UNDERDOG_BANNER_DURATION : 0);
+}
+
+boolean isUnderdogBattleVictory() {
+  boolean attackerWins = attackSum > defendSum;
+  if (attackerWins) {
+    return attackDice.length < defendDice.length;
+  }
+  return defendDice.length < attackDice.length;
 }
 
 float battleBashStartTime() {
@@ -157,19 +173,30 @@ void showBattleDice() {
   // fill(teamColor(defendingCountry.myTeamIndex, isFlashingWinner && winningTeamIndex == defendingCountry.myTeamIndex ? 185 : 110));
   // rect(width/2, 0, width/2, height);
 
-  fill(0, 120);
-  rect(0, 0, width, height);
+  float dimAlpha = getBattleDimAlpha(elapsed);
+  if (dimAlpha > 0) {
+    fill(0, dimAlpha);
+    rect(0, 0, width, height);
+  }
 
   drawBattleScores(isFlashingWinner, winningTeamIndex, flash);
   boolean attackerWins = attackSum > defendSum;
   if (attackerWins) {
-    drawBattleDiceColumn(defendBattleDice, elapsed, false, true, false, false);
+    drawBattleDiceColumn(defendBattleDice, elapsed, false, true, true, false);
     drawBattleDiceColumn(attackBattleDice, elapsed, true, false, true, false);
   }
   else {
     drawBattleDiceColumn(attackBattleDice, elapsed, true, true, false, true);
     drawBattleDiceColumn(defendBattleDice, elapsed, false, false, false, false);
   }
+
+  drawUnderdogVictoryBanner(elapsed);
+}
+
+float getBattleDimAlpha(float elapsed) {
+  float fadeIn = constrain(elapsed / BATTLE_DIM_FADE_IN_DURATION, 0, 1);
+  float fadeOut = constrain((currentBattleResolutionTime() - elapsed) / BATTLE_DIM_FADE_OUT_DURATION, 0, 1);
+  return BATTLE_DIM_ALPHA * min(fadeIn, fadeOut);
 }
 
 void drawBattleScores(boolean isFlashingWinner, int winningTeamIndex, float flash) {
@@ -201,6 +228,37 @@ void drawBattleScore(int score, float x, float y, int teamIndex, boolean isWinne
   fill(teamColor(teamIndex));
   text(scoreText, x, y);
   textAlign(CENTER, CENTER);
+}
+
+void drawUnderdogVictoryBanner(float elapsed) {
+  if (!isUnderdogBattleVictory() || elapsed < battleResolutionTime) {
+    return;
+  }
+
+  float bannerElapsed = elapsed - battleResolutionTime;
+  float fadeIn = constrain(bannerElapsed / 0.18, 0, 1);
+  float fadeOut = constrain((BATTLE_UNDERDOG_BANNER_DURATION - bannerElapsed) / 0.25, 0, 1);
+  float alphaValue = 255 * min(fadeIn, fadeOut);
+  float y = height / 2 - 138;
+
+  pushStyle();
+  rectMode(CENTER);
+  textAlign(CENTER, CENTER);
+  textSize(42);
+  noStroke();
+  fill(0, alphaValue * 0.62);
+  rect(width / 2 + 4, y + 5, 500, 68, 6);
+  fill(42, 190, 255, alphaValue);
+  rect(width / 2, y, 500, 68, 6);
+  stroke(255, alphaValue * 0.8);
+  strokeWeight(2);
+  noFill();
+  rect(width / 2, y, 492, 60, 6);
+  fill(0, alphaValue * 0.72);
+  text("UNDERDOG VICTORY!", width / 2 + 2, y + 4);
+  fill(255, alphaValue);
+  text("UNDERDOG VICTORY!", width / 2, y);
+  popStyle();
 }
 
 void drawBattleDiceColumn(BattleDie[] dice, float elapsed, boolean isAttacker, boolean isLoser, boolean isRightSide, boolean loserKeepsOneDie) {

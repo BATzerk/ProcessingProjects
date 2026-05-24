@@ -74,15 +74,15 @@ void startNewGame() {
     eliminated = new boolean[NUM_PLAYERS]; // assuming this fills false
     botPlayers = new AI[NUM_PLAYERS]; // assuming this fills false
     for (int i = 0; i < NUM_PLAYERS; i++) {
-      botPlayers[i] = new AI(i);
+      botPlayers[i] = createAIForTeam(i);
     }
   } else {
     for (int i = 0; i < NUM_PLAYERS; i++) {
-      if (i != HUMAN_PLAYER_INDEX) {
-        botPlayers[i] = new AI(i);
+      if (!isPlayerHumanControlled(i)) {
+        botPlayers[i] = createAIForTeam(i);
       }
     }
-    statusText = "You are " + getPlayerName(HUMAN_PLAYER_INDEX) + ". Click one of your countries with 2+ dice.";
+    statusText = "Click one of your countries with 2+ dice.";
   }
   startAITurnIfNeeded();
 }
@@ -228,6 +228,17 @@ void countryAttackOther(Country attacker, Country defender) {
   }
 }
 
+void migrateDice(Country from, Country _to) {
+  int diceToGive = from.myDice - 1;
+  _to.myDice += diceToGive;
+  from.myDice = 1;
+  setSelectedCountryIndex(-1);
+  if (isCurrentPlayerHuman()) {
+    statusText = "Moved " + diceToGive + " dice. Turn ended.";
+  }
+  startNextPlayerTurn();
+}
+
 void moveIntoCountry(Country from, Country _to) {
   int victimPlayerIndex = _to.myTeamIndex;
   _to.myTeamIndex = currPlayerIndex;
@@ -262,7 +273,7 @@ void moveIntoCountry(Country from, Country _to) {
     }
     if (playersRemaining == 1) {
       isGameOver = true;
-      statusText = currPlayerName + " wins. Press R for a new game.";
+      statusText = currPlayerName + " wins. Press CTRL+R for a new game.";
       for (int i = 0; i < countries.length; i++) {
         countries[i].myDice = countries[i].cells.size();
       }

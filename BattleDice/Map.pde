@@ -8,6 +8,7 @@ final int BORDER_HOVERED_ATTACK = 2;
 final float COUNTRY_SHUDDER_DURATION = 0.45;
 final float COUNTRY_SHUDDER_AMOUNT = 5;
 final float COUNTRY_CAPTURE_HIGHLIGHT_DURATION = 1.0;
+final float COUNTRY_DIE_RADIUS_SCALE = 0.65;
 
 class Country
 {
@@ -148,15 +149,77 @@ class Country
       && selectedCountryIndex > -1
       && countries[selectedCountryIndex].myTeamIndex != this.myTeamIndex
       && isNeighboring(selectedCountryIndex);
+    boolean canReceiveMigration =
+      isCurrentPlayerHuman()
+      && !isBattleMode
+      && !isGameOver
+      && selectedCountryIndex > -1
+      && canMigrateDice(countries[selectedCountryIndex], this);
 
     color baseColor = myTeamIndex > -1 ? teamColor(myTeamIndex) : color(32, 34, 234);
-    if (!isInDanger) {
+    if (!isInDanger && !canReceiveMigration) {
       return baseColor;
     } else {
       float highlightAlpha = sinRange(currTime*0.008, 0.2, 0.5);//+ID
-      color highlightColor = myTeamIndex>-1 ? color(teamHue(myTeamIndex), 90, 255) : color(255);
+      color highlightColor = canReceiveMigration ? color(90, 120, 255) : (myTeamIndex>-1 ? color(teamHue(myTeamIndex), 90, 255) : color(255));
       return lerpColor(baseColor, highlightColor, highlightAlpha);
     }
+  }
+
+  PVector centerScreenPos() {
+    PVector center = new PVector(0, 0);
+    for (int i=0; i<cells.size (); i++) {
+      Cell cell = (Cell) cells.get(i);
+      center.add(cell.screenPos);
+    }
+    center.div(max(1, cells.size()));
+    return center;
+  }
+
+  PVector dieScreenPos(int dieIndex) {
+    return centeredDieCell(dieIndex).screenPos.copy();
+  }
+
+  Cell centeredDieCell(int dieIndex) {
+    PVector center = centerScreenPos();
+    Cell bestCell = (Cell) cells.get(0);
+    float bestScore = Float.MAX_VALUE;
+
+    for (int i=0; i<cells.size (); i++) {
+      Cell cell = (Cell) cells.get(i);
+      int closerCells = countCellsCloserToCenter(cell, center);
+      if (closerCells != dieIndex) {
+        continue;
+      }
+
+      float score = cell.screenPos.dist(center);
+      if (score < bestScore) {
+        bestCell = cell;
+        bestScore = score;
+      }
+    }
+
+    return bestCell;
+  }
+
+  int countCellsCloserToCenter(Cell candidate, PVector center) {
+    int count = 0;
+    float candidateDistance = candidate.screenPos.dist(center);
+    for (int i=0; i<cells.size (); i++) {
+      Cell cell = (Cell) cells.get(i);
+      float distance = cell.screenPos.dist(center);
+      if (
+        distance < candidateDistance
+        || (distance == candidateDistance && cellIndexTieBreaker(cell) < cellIndexTieBreaker(candidate))
+      ) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  int cellIndexTieBreaker(Cell cell) {
+    return cell.gridPos.y * GRID_WIDTH + cell.gridPos.x;
   }
 
   void drawMyCellsShapes() {
@@ -189,11 +252,8 @@ class Country
     fill(250);
     stroke(60);
     strokeWeight(1);
-    for (int i=0; i<cells.size (); i++) {
-      Cell cell = (Cell) cells.get(i);
-      if (i < myDice) {
-        drawHexagon(cell.screenPos, tileRadius * 0.65);
-      }
+    for (int i=0; i<myDice; i++) {
+      drawHexagon(dieScreenPos(i), tileRadius * COUNTRY_DIE_RADIUS_SCALE);
     }
     popMatrix();
   }
@@ -210,7 +270,7 @@ class Country
       && !isBattleMode
       && !isGameOver
       && selectedCountryIndex > -1
-      && canAttackCountry(countries[selectedCountryIndex], this);
+      && canActOnCountry(countries[selectedCountryIndex], this);
   }
 
   void drawNormalBorders() {

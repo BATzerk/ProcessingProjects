@@ -32,6 +32,9 @@ final float END_TURN_BUTTON_WIDTH = 134;
 final float END_TURN_BUTTON_HEIGHT = 42;
 final float END_TURN_BUTTON_MARGIN = 16;
 final float END_TURN_BUTTON_RADIUS = 6;
+final float WIN_CHANCE_TOOLTIP_PAD_X = 10;
+final float WIN_CHANCE_TOOLTIP_PAD_Y = 7;
+final float WIN_CHANCE_TOOLTIP_RADIUS = 5;
 
 // Grid Properties
 float tileRadius = 22;
@@ -71,8 +74,10 @@ void setup() {
   size(1024, 768);
   textAlign(CENTER, CENTER);
   // textFont(loadFont("AdobeDevanagari-Bold-48.vlw"));
-
-  startNewGame();
+  pmillis = millis();
+  if (MOVIE_MODE) {
+    startNewGame();
+  }
 }
 
 
@@ -87,9 +92,15 @@ void draw() {
   if (MOVIE_MODE && isGameOver && currTime > timeWhenStartNextGame) {
     startNewGame();
   }
+
+  if (isPlayerSelectScreen) {
+    drawPlayerSelectScreen();
+    return;
+  }
   
   // DRAW!
   drawGridCells();
+  drawAttackWinChanceTooltip();
 
   // ---- BATTLE MODE ----
   if (isBattleMode) {
@@ -100,7 +111,7 @@ void draw() {
     else {
       updateBattleDiceValues(beenRollingFor);
     }
-    if (beenRollingFor > battleResolutionTime) {
+    if (beenRollingFor > currentBattleResolutionTime()) {
       finishBattle();
     }
   }
@@ -163,6 +174,44 @@ void drawGridCells() {
   popMatrix();
 }
 
+void drawAttackWinChanceTooltip() {
+  if (!isCurrentPlayerHuman() || isBattleMode || isGameOver || selectedCountryIndex < 0) {
+    return;
+  }
+
+  Country attacker = countries[selectedCountryIndex];
+  Country defender = getCountryByScreenPos(mouseX, mouseY);
+  if (!canAttackCountry(attacker, defender)) {
+    return;
+  }
+
+  int winPercent = round(getWinChance(attacker.myDice, defender.myDice) * 100);
+  String label = winPercent + "% TO WIN";
+
+  pushStyle();
+  rectMode(CORNER);
+  textAlign(CENTER, CENTER);
+  textSize(15);
+  float tooltipWidth = textWidth(label) + WIN_CHANCE_TOOLTIP_PAD_X * 2;
+  float tooltipHeight = textAscent() + textDescent() + WIN_CHANCE_TOOLTIP_PAD_Y * 2;
+  float x = constrain(mouseX + 16, 8, width - tooltipWidth - 8);
+  float y = constrain(mouseY - tooltipHeight - 14, ACTIVE_PLAYER_BANNER_HEIGHT + 8, height - tooltipHeight - 42);
+  noStroke();
+  fill(0, 115);
+  rect(x + 3, y + 4, tooltipWidth, tooltipHeight, WIN_CHANCE_TOOLTIP_RADIUS);
+  fill(teamHue(currPlayerIndex), 145, 245);
+  rect(x, y, tooltipWidth, tooltipHeight, WIN_CHANCE_TOOLTIP_RADIUS);
+  stroke(255, 210);
+  strokeWeight(1.5);
+  noFill();
+  rect(x + 1, y + 1, tooltipWidth - 2, tooltipHeight - 2, WIN_CHANCE_TOOLTIP_RADIUS);
+  fill(0, 180);
+  text(label, x + tooltipWidth / 2 + 1, y + tooltipHeight / 2 + 2);
+  fill(255);
+  text(label, x + tooltipWidth / 2, y + tooltipHeight / 2);
+  popStyle();
+}
+
 void drawCurrentPlayerHeader() {
   noStroke();
   float bannerWidth = width / (float) NUM_PLAYERS;
@@ -193,10 +242,10 @@ void drawCurrentPlayerHeader() {
   fill(255);
   textSize(16);
   String helpText = isCurrentPlayerHuman()
-    ? "Click your lit country, click a neighboring enemy or empty country to attack. ENTER ends turn. F fast-forwards. R restarts."
+    ? "Click your lit country, then a neighboring enemy, empty country, or connected own country with room. ENTER ends turn. Hold F to fast-forward. CTRL+R restarts."
     : currPlayerName + " is thinking...";
   if (isGameOver) {
-    helpText = currPlayerName + " wins. Press R for a new game.";
+    helpText = currPlayerName + " wins. Press CTRL+R for a new game.";
   } else if (statusText.length() > 0) {
     helpText = statusText;
   }

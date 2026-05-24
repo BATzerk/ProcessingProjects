@@ -10,13 +10,25 @@ final float AI_GROUP_MERGE_WEIGHT = 6;
 final float AI_ELIMINATION_BONUS = 45;
 final float AI_EXPOSURE_PENALTY = 12;
 final float AI_RANDOMNESS = 4;
+final float AI_MIN_MIGRATION_SCORE = 18;
+final float AI_MIGRATION_ATTACK_WEIGHT = 0.7;
+final float AI_MIGRATION_FRONTIER_WEIGHT = 7;
+final float AI_MIGRATION_SOURCE_DANGER_PENALTY = 10;
+final int AI_MOVE_ATTACK = 0;
+final int AI_MOVE_MIGRATE = 1;
 
 class AI
 {
   int myTeamIndex;
+  int difficulty;
 
   AI(int team) {
+    this(team, AI_DIFFICULTY_NORMAL);
+  }
+
+  AI(int team, int aiDifficulty) {
     myTeamIndex = team;
+    difficulty = aiDifficulty;
   }
 
   void executeNextStep() {
@@ -24,35 +36,55 @@ class AI
 
     AIMove bestMove = getBestMove();
 
-    if (bestMove == null || bestMove.score < AI_MIN_ATTACK_SCORE || isGameOver) {
+    if (bestMove == null || isGameOver) {
       startNextPlayerTurn();
       return;
     }
 
     setSelectedCountryIndex(bestMove.attacker.ID);
-    countryAttackOther(bestMove.attacker, bestMove.defender);
+    if (bestMove.moveType == AI_MOVE_MIGRATE) {
+      migrateDice(bestMove.attacker, bestMove.defender);
+      return;
+    } else {
+      countryAttackOther(bestMove.attacker, bestMove.defender);
+    }
   
     // Plan when to do next step. NOTE: FRAGILE! Timer runs concurrently with battle timer. IDEALLY, we'd only have ONE timer. It's "timeWhenNextStep", and when it's time, it'd call a function that handles what to do.
     timeWhenNextAIStep = currTime + (isBattleMode ? 3.0 : 0.5);
   }
 
   AIMove getBestMove() {
-    AIMove bestMove = null;
+    AIMove bestAttack = null;
+    AIMove bestMigration = null;
     Country[] selectableCountries = getSelectableCountries();
     for (int i=0; i<selectableCountries.length; i++) {
       Country attacker = selectableCountries[i];
       for (int n=0; n<attacker.neighbors.length; n++) {
         Country defender = attacker.neighbors[n];
-        if (!canCountryAttackOther(attacker, defender)) {
-          continue;
+        if (canCountryAttackOther(attacker, defender)) {
+          float score = scoreAttack(attacker, defender);
+          if (bestAttack == null || score > bestAttack.score) {
+            bestAttack = new AIMove(attacker, defender, score, AI_MOVE_ATTACK);
+          }
         }
-        float score = scoreAttack(attacker, defender);
-        if (bestMove == null || score > bestMove.score) {
-          bestMove = new AIMove(attacker, defender, score);
+      }
+      for (int n=0; n<countries.length; n++) {
+        Country defender = countries[n];
+        if (canMigrateDice(attacker, defender)) {
+          float score = scoreMigration(attacker, defender);
+          if (bestMigration == null || score > bestMigration.score) {
+            bestMigration = new AIMove(attacker, defender, score, AI_MOVE_MIGRATE);
+          }
         }
       }
     }
-    return bestMove;
+    if (bestAttack != null && bestAttack.score >= getMinAttackScore()) {
+      return bestAttack;
+    }
+    if (bestMigration != null && bestMigration.score >= getMinMigrationScore()) {
+      return bestMigration;
+    }
+    return null;
   }
 
   float scoreAttack(Country attacker, Country defender) {
@@ -62,10 +94,80 @@ class AI
     score += getCaptureValue(defender) * AI_CAPTURE_WEIGHT;
     score += getGroupMergeValue(attacker, defender) * AI_GROUP_MERGE_WEIGHT;
     score += getEliminationValue(defender);
-    score -= getExposureValue(attacker, defender) * AI_EXPOSURE_PENALTY;
-    score += random(-AI_RANDOMNESS, AI_RANDOMNESS);
+    score -= getExposureValue(attacker, defender) * getExposurePenalty();
+    score += random(-getRandomness(), getRandomness());
 
     return score;
+  }
+
+  float scoreMigration(Country from, Country _to) {
+    int targetDiceAfterMigration = _to.myDice + from.myDice - 1;
+    float score = 0;
+
+    score += getBestAttackOpportunity(_to, targetDiceAfterMigration) * AI_MIGRATION_ATTACK_WEIGHT;
+    score -= getBestAttackOpportunity(_to, _to.myDice) * AI_MIGRATION_ATTACK_WEIGHT;
+    score += countNonFriendlyNeighbors(_to) * AI_MIGRATION_FRONTIER_WEIGHT;
+    score -= countNonFriendlyNeighbors(from) * AI_MIGRATION_SOURCE_DANGER_PENALTY;
+
+    return score;
+  }
+
+  float getMinAttackScore() {
+    switch (difficulty) {
+      case AI_DIFFICULTY_EASY: return 74;
+      case AI_DIFFICULTY_HARD: return 54;
+      default: return AI_MIN_ATTACK_SCORE;
+    }
+  }
+
+  float getMinMigrationScore() {
+    switch (difficulty) {
+      case AI_DIFFICULTY_EASY: return 34;
+      case AI_DIFFICULTY_HARD: return 12;
+      default: return AI_MIN_MIGRATION_SCORE;
+    }
+  }
+
+  float getExposurePenalty() {
+    switch (difficulty) {
+      case AI_DIFFICULTY_EASY: return 4;
+      case AI_DIFFICULTY_HARD: return 16;
+      default: return AI_EXPOSURE_PENALTY;
+    }
+  }
+
+  float getRandomness() {
+    switch (difficulty) {
+      case AI_DIFFICULTY_EASY: return 24;
+      case AI_DIFFICULTY_HARD: return 1;
+      default: return AI_RANDOMNESS;
+    }
+  }
+
+  float getBestAttackOpportunity(Country attacker, int attackDice) {
+    float bestScore = 0;
+    for (int i=0; i<attacker.neighbors.length; i++) {
+      Country defender = attacker.neighbors[i];
+      if (!canDiceAttackCountry(attackDice, defender)) {
+        continue;
+      }
+      float score = getWinChance(attackDice, defender.myDice) * AI_WIN_CHANCE_WEIGHT;
+      score += getCaptureValue(defender) * AI_CAPTURE_WEIGHT;
+      if (score > bestScore) {
+        bestScore = score;
+      }
+    }
+    return bestScore;
+  }
+
+  int countNonFriendlyNeighbors(Country country) {
+    int count = 0;
+    for (int i=0; i<country.neighbors.length; i++) {
+      if (country.neighbors[i].myTeamIndex != myTeamIndex) {
+        count++;
+      }
+    }
+    return count;
   }
 
   float getCaptureValue(Country defender) {
@@ -144,43 +246,6 @@ class AI
     return false;
   }
 
-  float getWinChance(int attackDice, int defendDice) {
-    if (defendDice <= 0 || attackDice > defendDice * DICE_SIDES) {
-      return 1;
-    }
-
-    float[] attackOdds = getDiceSumOdds(attackDice);
-    float[] defendOdds = getDiceSumOdds(defendDice);
-    float chance = 0;
-    for (int attackSum=0; attackSum<attackOdds.length; attackSum++) {
-      if (attackOdds[attackSum] == 0) {
-        continue;
-      }
-      for (int defendSum=0; defendSum<defendOdds.length && defendSum<attackSum; defendSum++) {
-        chance += attackOdds[attackSum] * defendOdds[defendSum];
-      }
-    }
-    return chance;
-  }
-
-  float[] getDiceSumOdds(int diceCount) {
-    float[] odds = new float[diceCount * DICE_SIDES + 1];
-    odds[0] = 1;
-    for (int d=0; d<diceCount; d++) {
-      float[] nextOdds = new float[diceCount * DICE_SIDES + 1];
-      for (int sum=0; sum<odds.length; sum++) {
-        if (odds[sum] == 0) {
-          continue;
-        }
-        for (int roll=1; roll<=DICE_SIDES; roll++) {
-          nextOdds[sum + roll] += odds[sum] / DICE_SIDES;
-        }
-      }
-      odds = nextOdds;
-    }
-    return odds;
-  }
-
   Country[] getSelectableCountries() {
     ArrayList<Country> list = new ArrayList<Country>();
     for (int i=0; i<countries.length; i++) {
@@ -228,6 +293,12 @@ class AI
     // Sure, why not!
     return true;
   }
+  boolean canDiceAttackCountry(int attackDice, Country defender) {
+    if (defender.myTeamIndex == myTeamIndex) { return false; }
+    if (attackDice <= 1) { return false; }
+    if (attackDice*6 <= defender.myDice) { return false; }
+    return true;
+  }
   boolean shouldCountryAttackOther(Country attacker, Country defender) {
     // It isn't ALLOWED to attack? Return false, of course.
     if (!canCountryAttackOther(attacker, defender)) { return false; }
@@ -241,10 +312,12 @@ class AIMove
   Country attacker;
   Country defender;
   float score;
+  int moveType;
 
-  AIMove(Country attacker, Country defender, float score) {
+  AIMove(Country attacker, Country defender, float score, int moveType) {
     this.attacker = attacker;
     this.defender = defender;
     this.score = score;
+    this.moveType = moveType;
   }
 }
