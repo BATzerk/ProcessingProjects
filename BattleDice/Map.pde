@@ -15,7 +15,7 @@ final float BOARD_SHADOW_MIDDLE_PAD = HEX_CELL_RENDER_BUFFER + 4;
 
 class Country
 {
-  int myTeamIndex = -1;
+  int myTeamIndex = NO_TEAM;
   int myDice = 0;
   LinkedList<Cell> cells;
   Country[] neighbors;
@@ -84,7 +84,7 @@ class Country
   void learnNeighbors() {
     Set<Integer> set = new HashSet<Integer>();
     for (int i = 0; i < cells.size (); i++) {
-      for (int face = 0; face < NUM_FACES; face++) {
+      for (int face = 0; face < HEX_SIDES; face++) {
         Cell ncell = cells.get(i).getNeighbor(face);
         if (ncell != null && ncell.myCountry != null) {
           set.add(ncell.myCountry.ID);
@@ -149,22 +149,22 @@ class Country
       isCurrentPlayerHuman()
       && !isBattleMode()
       && !isGameOver()
-      && selectedCountryIndex > -1
+      && selectedCountryIndex != NO_COUNTRY
       && countries[selectedCountryIndex].myTeamIndex != this.myTeamIndex
       && isNeighboring(selectedCountryIndex);
     boolean canReceiveMigration =
       isCurrentPlayerHuman()
       && !isBattleMode()
       && !isGameOver()
-      && selectedCountryIndex > -1
+      && selectedCountryIndex != NO_COUNTRY
       && canMigrateDice(countries[selectedCountryIndex], this);
 
-    color baseColor = myTeamIndex > -1 ? teamColor(myTeamIndex) : color(28, 70, 255);//0xfff5dbb2;//
+    color baseColor = myTeamIndex != NO_TEAM ? teamColor(myTeamIndex) : color(28, 70, 255);//0xfff5dbb2;//
     if (!isInDanger && !canReceiveMigration) {
       return baseColor;
     } else {
       float highlightAlpha = sinRange(currTime*0.008, 0.2, 0.5);//+ID
-      color highlightColor = canReceiveMigration ? color(90, 120, 255) : (myTeamIndex>-1 ? color(teamHue(myTeamIndex), 90, 255) : color(255));
+      color highlightColor = canReceiveMigration ? color(90, 120, 255) : (myTeamIndex != NO_TEAM ? color(teamHue(myTeamIndex), 90, 255) : color(255));
       return lerpColor(baseColor, highlightColor, highlightAlpha);
     }
   }
@@ -311,7 +311,7 @@ class Country
     return isCurrentPlayerHuman()
       && !isBattleMode()
       && !isGameOver()
-      && selectedCountryIndex > -1
+      && selectedCountryIndex != NO_COUNTRY
       && canActOnCountry(countries[selectedCountryIndex], this);
   }
 
@@ -337,7 +337,7 @@ class Country
     color baseBorderColor = color(80);
     for (int i=0; i<cells.size (); i++) {
       Cell thisCell = (Cell) cells.get(i);
-      for (int face=0; face<NUM_FACES; face++) {
+      for (int face=0; face<HEX_SIDES; face++) {
         Cell otherCell = thisCell.getNeighbor(face);
         boolean isBorder = otherCell==null || thisCell.myCountry!=otherCell.myCountry;
         if (isBorder) {

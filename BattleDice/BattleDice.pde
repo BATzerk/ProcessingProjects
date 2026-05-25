@@ -11,8 +11,8 @@
  */
 
 // Tweakables
-final boolean SKIP_MENU_SCREEN = true;//false;
-final int STARTING_PLAYER_INDEX = 1; // Temp testing: choose which player starts the game.
+final boolean DEBUG_SKIP_MENU_SCREEN = true;
+final int DEBUG_STARTING_PLAYER_INDEX = 1;
 final int NUM_STARTING_DICE_PER_TEAM = 6;
 final int MIN_CELLS_PER_COUNTRY = 5;
 final int MAX_CELLS_PER_COUNTRY = 12;
@@ -47,10 +47,14 @@ final float MIGRATION_DIE_STAGGER = 0.055;
 final float MIGRATION_DIE_ARC_HEIGHT = 42;
 // Constants
 final int HUMAN_PLAYER_INDEX = 0;
-final int NUM_FACES = 6; // it's hip to be hex.
+final int NO_COUNTRY = -1;
+final int NO_TEAM = -1;
+final int UNKNOWN_BOARD_SIZE = -1;
+final int HEX_SIDES = 6;
 final int DICE_SIDES = 6;
 final float NORMAL_TIME_SCALE = 1;
 final float FAST_FORWARD_TIME_SCALE = 6;
+final float DEBUG_TIME_SCALE = 1000;
 final int GAME_MODE_PLAYER_SELECT = 0;
 final int GAME_MODE_HUMAN_TURN = 1;
 final int GAME_MODE_AI_TURN = 2;
@@ -68,8 +72,8 @@ float tileRadius = 22;
 float hexRatio = 0.8457;
 final float HEX_CELL_RENDER_BUFFER = 1;
 PVector gridPos; // the TOP-left corner of the grid.
-int boardLayoutWidth = -1;
-int boardLayoutHeight = -1;
+int boardLayoutWidth = UNKNOWN_BOARD_SIZE;
+int boardLayoutHeight = UNKNOWN_BOARD_SIZE;
 Cell[][] gridCells;
 Country[] countries=new Country[0];
 PImage backgroundImage;
@@ -80,8 +84,8 @@ float[][] winChanceCache = new float[MAX_CELLS_PER_COUNTRY + 1][MAX_CELLS_PER_CO
 boolean[][] winChanceCached = new boolean[MAX_CELLS_PER_COUNTRY + 1][MAX_CELLS_PER_COUNTRY + 1];
 
 // Game Loop
-int gameMode = SKIP_MENU_SCREEN ? GAME_MODE_HUMAN_TURN : GAME_MODE_PLAYER_SELECT;
-int NUM_PLAYERS = 4;
+int gameMode = DEBUG_SKIP_MENU_SCREEN ? GAME_MODE_HUMAN_TURN : GAME_MODE_PLAYER_SELECT;
+int playerCount = 4;
 int currPlayerIndex;
 boolean[] eliminated;
 String currPlayerName;
@@ -110,7 +114,7 @@ float timeWhenStartedMigration;
 
 // ======== SETUP ========
 void setup() {
-  size(1024, 768, P2D);
+  size(1024, 768, OPENGL);
   surface.setResizable(true);
   colorMode(HSB);
   textAlign(CENTER, CENTER);
@@ -119,7 +123,7 @@ void setup() {
   updateBoardLayout();
   pmillis = millis();
   runStartupRuleChecks();
-  if (SKIP_MENU_SCREEN) {
+  if (DEBUG_SKIP_MENU_SCREEN) {
     startNewGame();
   }
 }
@@ -391,8 +395,8 @@ void drawAttackWinChanceTooltip() {
 
 void drawCurrentPlayerHeader() {
   noStroke();
-  float bannerWidth = width / (float) NUM_PLAYERS;
-  for (int i = 0; i < NUM_PLAYERS; i++) {
+  float bannerWidth = width / (float) playerCount;
+  for (int i = 0; i < playerCount; i++) {
     boolean isActive = i == currPlayerIndex;
     float x = i * bannerWidth;
     float bannerHeight = isActive ? ACTIVE_PLAYER_BANNER_HEIGHT : PLAYER_BANNER_HEIGHT;

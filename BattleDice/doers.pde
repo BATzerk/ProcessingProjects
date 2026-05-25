@@ -5,11 +5,12 @@ void startNewGame() {
   // ---- Reset Gameplay Variables ----
   {
     setGameMode(GAME_MODE_HUMAN_TURN);
-    eliminated = new boolean[NUM_PLAYERS]; // assuming this fills false
-    botPlayers = new AI[NUM_PLAYERS]; // assuming this fills false
-    setCurrPlayerIndex(STARTING_PLAYER_INDEX);
+    eliminated = new boolean[playerCount];
+    botPlayers = new AI[playerCount];
+    int startingPlayerIndex = DEBUG_SKIP_MENU_SCREEN ? DEBUG_STARTING_PLAYER_INDEX : HUMAN_PLAYER_INDEX;
+    setCurrPlayerIndex(startingPlayerIndex);
     turnCount = 1;
-    setSelectedCountryIndex(-1);
+    setSelectedCountryIndex(NO_COUNTRY);
     resetPlayerLuckiness();
     attackingCountry = null;
     defendingCountry = null;
@@ -33,7 +34,7 @@ void startNewGame() {
       // Assign starting countries
       Set<Integer> invalid = new HashSet<Integer>(); // save taken and nearby starts
       int assigned = 0;
-      for (int i = 0; assigned < NUM_PLAYERS && i < countries.length; i++) {
+      for (int i = 0; assigned < playerCount && i < countries.length; i++) {
         if (invalid.contains(i)) {
           continue;
         }
@@ -53,7 +54,7 @@ void startNewGame() {
         continue;
       }
 
-      if (assigned < NUM_PLAYERS) {
+      if (assigned < playerCount) {
         println("= Could only assign " + assigned + " players.");
         continue;
       }
@@ -69,7 +70,7 @@ void startNewGame() {
     }
   }
 
-  for (int i = 0; i < NUM_PLAYERS; i++) {
+  for (int i = 0; i < playerCount; i++) {
     if (!isPlayerHumanControlled(i)) {
       botPlayers[i] = createAIForTeam(i);
     }
@@ -141,7 +142,7 @@ void growCountryStep() {
     int numAttemptsLeft = 2;
     do {
       Cell edge = countries[i].getRandomEdgeCell();
-      int face = floor(random(NUM_FACES));
+      int face = floor(random(HEX_SIDES));
       newFriend = edge.getNeighbor(face);
       shouldAddCell = canGenerateLandAt(newFriend);
       numAttemptsLeft --;
@@ -157,11 +158,11 @@ void growCountryStep() {
 // ======== TAKING TURNS ========
 void setCurrPlayerIndex(int index) {
   while (eliminated[index]) {
-    index = (index + 1) % NUM_PLAYERS;
+    index = (index + 1) % playerCount;
   }
   currPlayerIndex = index;
   currPlayerName = getPlayerName(currPlayerIndex);
-  setSelectedCountryIndex(-1);
+  setSelectedCountryIndex(NO_COUNTRY);
 }
 boolean isCurrentPlayerHuman() {
   return botPlayers[currPlayerIndex] == null;
@@ -213,11 +214,11 @@ void updateCountryDisplayOffsets() {
 }
 void startNextPlayerTurn() {
   // Set currPlayerIndex
-  setCurrPlayerIndex((currPlayerIndex + 1) % NUM_PLAYERS);
+  setCurrPlayerIndex((currPlayerIndex + 1) % playerCount);
   currPlayerName = getPlayerName(currPlayerIndex);
 
   // === Distribute dice === //
-  if (turnCount >= NUM_PLAYERS) { // don't give out dice on the first round
+  if (turnCount >= playerCount) { // don't give out dice on the first round
     ArrayList<int[]> groups = getCountryGroups(currPlayerIndex);
     for (int[] group: groups) { // for each group
       int bank = group.length; // Rubberbanding, min 3 per group max(3, group.length);
@@ -244,7 +245,7 @@ void startNextPlayerTurn() {
 }
 
 void countryAttackOther(Country attacker, Country defender) {
-  if (defender.myTeamIndex == -1) { // take empty countries
+  if (defender.myTeamIndex == NO_TEAM) { // take empty countries
     moveIntoCountry(attacker, defender);
   }
   else { // fight occupied countries
@@ -262,7 +263,7 @@ void startMigrationDice(Country from, Country _to) {
   migrationToCountry = _to;
   enterMigrationMode();
   timeWhenStartedMigration = currTime;
-  setSelectedCountryIndex(-1);
+  setSelectedCountryIndex(NO_COUNTRY);
   updateCountryDisplayOffsets();
 
   migrationDieStartPositions = new PVector[migrationDiceCount];
@@ -331,13 +332,13 @@ void moveIntoCountry(Country from, Country _to) {
   }
   _to.myDice = diceToGive;
   from.myDice -= diceToGive;
-  setSelectedCountryIndex(-1);
+  setSelectedCountryIndex(NO_COUNTRY);
   if (isCurrentPlayerHuman()) {
     statusText = "Captured country. Attack again, or press ENTER to end your turn.";
   }
 
   // Is player eliminated?
-  if (victimPlayerIndex > -1) {
+  if (victimPlayerIndex != NO_TEAM) {
     for (int i = 0; i < countries.length; i++) {
       if (countries[i].myTeamIndex == victimPlayerIndex) {
         return;

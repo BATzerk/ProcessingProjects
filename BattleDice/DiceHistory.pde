@@ -16,12 +16,12 @@ void resetDiceHistory() {
 }
 
 void recordDiceHistorySample() {
-  if (countries == null || countries.length == 0 || NUM_PLAYERS <= 0) {
+  if (countries == null || countries.length == 0 || playerCount <= 0) {
     return;
   }
 
-  int[] totals = new int[NUM_PLAYERS];
-  for (int i = 0; i < NUM_PLAYERS; i++) {
+  int[] totals = new int[playerCount];
+  for (int i = 0; i < playerCount; i++) {
     totals[i] = getPlayerDiceTotal(i);
   }
   diceHistoryByTurn.add(totals);
@@ -71,7 +71,7 @@ void drawDiceHistoryGraph() {
   text("0", graphX + DICE_HISTORY_GRAPH_LABEL_WIDTH / 2, plotY + plotH);
   text("turn " + diceHistoryTurnNumbers.get(diceHistoryTurnNumbers.size() - 1), plotX + plotW / 2, graphY + graphH - DICE_HISTORY_GRAPH_LABEL_HEIGHT / 2);
 
-  for (int i = 0; i < NUM_PLAYERS; i++) {
+  for (int i = 0; i < playerCount; i++) {
     drawDiceHistoryPlayerLine(i, plotX, plotY, plotW, plotH, maxDice);
   }
 
@@ -133,7 +133,7 @@ float getDiceHistoryTotalY(int total, float plotY, float plotH, int maxDice) {
 void drawDiceHistoryLegend(float x, float y) {
   textAlign(LEFT, CENTER);
   textSize(13);
-  for (int i = 0; i < NUM_PLAYERS; i++) {
+  for (int i = 0; i < playerCount; i++) {
     float rowY = y + i * 19;
     fill(teamColor(i));
     noStroke();

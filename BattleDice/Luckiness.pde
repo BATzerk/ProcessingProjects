@@ -1,7 +1,7 @@
 float[] playerLuckiness;
 
 void resetPlayerLuckiness() {
-  playerLuckiness = new float[NUM_PLAYERS];
+  playerLuckiness = new float[playerCount];
 }
 
 void recordBattleLuckiness(Country attacker, Country defender, boolean attackerWon) {

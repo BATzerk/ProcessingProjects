@@ -198,7 +198,7 @@ class AI
 
   float getCaptureValue(Country defender) {
     float value = defender.cells.size();
-    if (defender.myTeamIndex == -1) {
+    if (defender.myTeamIndex == NO_TEAM) {
       value += AI_EMPTY_CAPTURE_BONUS;
     } else {
       value += defender.myDice;
@@ -230,7 +230,7 @@ class AI
   }
 
   float getEliminationValue(Country defender) {
-    if (defender.myTeamIndex == -1) {
+    if (defender.myTeamIndex == NO_TEAM) {
       return 0;
     }
 

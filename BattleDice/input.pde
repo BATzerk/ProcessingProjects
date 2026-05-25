@@ -34,7 +34,7 @@ void keyPressed() {
     }
   }
   else if (key == 't') {
-    timeScale = timeScale>1 ? NORMAL_TIME_SCALE : 1000;
+    timeScale = timeScale>1 ? NORMAL_TIME_SCALE : DEBUG_TIME_SCALE;
   }
   else if (key == 'f' || key == 'F') {
     timeScale = FAST_FORWARD_TIME_SCALE;
@@ -75,7 +75,7 @@ void mousePressed() {
 
   Country country = cellMouse.myCountry;
 
-  if (selectedCountryIndex == -1) { // If no country selected
+  if (selectedCountryIndex == NO_COUNTRY) { // If no country selected
     if (canSelectCountry(country)) {
       setSelectedCountryIndex(country.ID);
       statusText = "Selected. Click a neighboring enemy or empty country to attack, or a connected country with room to migrate.";

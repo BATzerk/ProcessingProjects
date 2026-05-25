@@ -109,7 +109,7 @@ boolean isCountryInteractable(Country country) {
   if (!isCurrentPlayerHuman() || isBattleMode() || isMigrationMode() || isGameOver() || country == null) {
     return false;
   }
-  if (selectedCountryIndex == -1) {
+  if (selectedCountryIndex == NO_COUNTRY) {
     return canSelectCountry(country);
   }
   return canActOnCountry(countries[selectedCountryIndex], country);
@@ -230,14 +230,14 @@ Quality isCurrentGridLayoutGood() {
 
   // Neighboring enemies
   for (int i=0; i<countries.length; i++) {
-    if (countries[i].myTeamIndex > -1) {
+    if (countries[i].myTeamIndex != NO_TEAM) {
       if (!canCountryHoldStartingDice(countries[i])) {
         println("= Starting country too small");
         return Quality.BAD;
       }
       for (int c = i + 1; c < countries.length; c++) {
         if (
-          countries[c].myTeamIndex > -1
+          countries[c].myTeamIndex != NO_TEAM
           && getCountryDistance(countries[i], countries[c]) < STARTING_COUNTRY_MIN_DISTANCE
         ) {
           println("= Starting countries too close");
@@ -276,5 +276,5 @@ color teamColor(int index) {
   return teamColor(index, 255);
 }
 float teamHue(int index) {
-  return (index * 255/NUM_PLAYERS + 65) % 255;
+  return (index * 255/playerCount + 65) % 255;
 }

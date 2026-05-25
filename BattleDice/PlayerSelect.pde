@@ -1,15 +1,15 @@
 // ======== PLAYER SELECT ========
-final int AI_DIFFICULTY_BEGINNER = -1;
-final int AI_DIFFICULTY_EASY = 0;
-final int AI_DIFFICULTY_NORMAL = 1;
-final int AI_DIFFICULTY_HARD = 2;
-int[] AI_DIFFICULTY_VALUES = {
+final int AI_DIFFICULTY_BEGINNER = 0;
+final int AI_DIFFICULTY_EASY = 1;
+final int AI_DIFFICULTY_NORMAL = 2;
+final int AI_DIFFICULTY_HARD = 3;
+final int[] AI_DIFFICULTY_VALUES = {
   AI_DIFFICULTY_BEGINNER,
   AI_DIFFICULTY_EASY,
   AI_DIFFICULTY_NORMAL,
   AI_DIFFICULTY_HARD
 };
-String[] AI_DIFFICULTY_LABELS = {
+final String[] AI_DIFFICULTY_LABELS = {
   "Beginner",
   "Easy",
   "Normal",
@@ -198,7 +198,7 @@ void keepSetupPlayerCountsValid(boolean preferHumans) {
 }
 
 void startGameFromPlayerSelect() {
-  NUM_PLAYERS = getSetupPlayerCount();
+  playerCount = getSetupPlayerCount();
   startNewGame();
 }
 
