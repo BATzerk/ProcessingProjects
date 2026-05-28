@@ -11,8 +11,8 @@
  */
 
 // Tweakables
-final boolean DEBUG_SKIP_MENU_SCREEN = true;
-final int DEBUG_STARTING_PLAYER_INDEX = 1;
+final boolean DEBUG_SKIP_MENU_SCREEN = false;
+final int DEBUG_STARTING_PLAYER_INDEX = 0;
 final int NUM_STARTING_DICE_PER_TEAM = 6;
 final int MIN_CELLS_PER_COUNTRY = 5;
 final int MAX_CELLS_PER_COUNTRY = 12;
@@ -115,6 +115,8 @@ float timeWhenStartedMigration;
 // ======== SETUP ========
 void setup() {
   size(1024, 768, OPENGL);
+  hint(DISABLE_DEPTH_TEST);
+  hint(DISABLE_OPTIMIZED_STROKE);
   surface.setResizable(true);
   colorMode(HSB);
   textAlign(CENTER, CENTER);
