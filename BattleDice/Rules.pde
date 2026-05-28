@@ -88,7 +88,16 @@ boolean canTeamMigrateDice(int teamIndex, Country from, Country _to) {
     && from.myTeamIndex == teamIndex
     && _to.myTeamIndex == teamIndex
     && areCountriesInSameOwnedGroup(from, _to)
-    && _to.myDice + from.myDice - 1 <= _to.cells.size();
+    && getMigrationDiceCount(from, _to) > 0;
+}
+
+int getMigrationDiceCount(Country from, Country _to) {
+  if (from == null || _to == null) {
+    return 0;
+  }
+  int diceAvailable = from.myDice - 1;
+  int targetCapacity = _to.cells.size() - _to.myDice;
+  return max(0, min(diceAvailable, targetCapacity));
 }
 
 boolean canActOnCountry(Country from, Country _to) {

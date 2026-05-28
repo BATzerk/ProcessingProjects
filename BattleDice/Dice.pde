@@ -169,6 +169,12 @@ void finishBattle() {
   setCurrentTurnMode();
   boolean attackerWon = attackSum > defendSum;
   recordBattleLuckiness(attackingCountry, defendingCountry, attackerWon);
+  if (isSuperUnderdogBattleVictory()) {
+    int winningSuperUnderdogTeamIndex = attackerWon
+      ? attackingCountry.myTeamIndex
+      : defendingCountry.myTeamIndex;
+    recordSuperUnderdogVictory(winningSuperUnderdogTeamIndex);
+  }
   if (attackerWon) {
     moveIntoCountry(attackingCountry, defendingCountry);
     defendingCountry.startCaptureHighlight();

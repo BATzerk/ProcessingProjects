@@ -18,6 +18,7 @@ final int MIN_CELLS_PER_COUNTRY = 5;
 final int MAX_CELLS_PER_COUNTRY = 12;
 final int GRID_WIDTH = 24;
 final int GRID_HEIGHT = 18;
+final int WINDOW_OS_UI_RESERVED_HEIGHT = 120;
 
 final int EDGE_LAND_AVOIDANCE_DISTANCE = 2;
 final float EDGE_LAND_GENERATION_CHANCE_PER_STEP = 0.4;
@@ -113,8 +114,11 @@ float timeWhenStartedMigration;
 
 
 // ======== SETUP ========
+void settings() {
+  size(displayWidth, max(480, displayHeight - WINDOW_OS_UI_RESERVED_HEIGHT), OPENGL);
+}
+
 void setup() {
-  size(1024, 768, OPENGL);
   hint(DISABLE_DEPTH_TEST);
   hint(DISABLE_OPTIMIZED_STROKE);
   surface.setResizable(true);
@@ -426,7 +430,7 @@ void drawCurrentPlayerHeader() {
   fill(255);
   textSize(16);
   String helpText = isCurrentPlayerHuman()
-    ? "Click your lit country, then a neighboring enemy, empty country, or connected own country with room. ENTER ends turn. Hold F to fast-forward. CTRL+R restarts."
+    ? "Click your lit country, then a neighboring enemy, empty country, or connected own country. ENTER ends turn. Hold F to fast-forward. CTRL+R restarts."
     : currPlayerName + " is thinking...";
   if (isGameOver()) {
     helpText = currPlayerName + " wins. Press CTRL+R for a new game.";

@@ -78,7 +78,7 @@ void mousePressed() {
   if (selectedCountryIndex == NO_COUNTRY) { // If no country selected
     if (canSelectCountry(country)) {
       setSelectedCountryIndex(country.ID);
-      statusText = "Selected. Click a neighboring enemy or empty country to attack, or a connected country with room to migrate.";
+      statusText = "Selected. Click a neighboring enemy or empty country to attack, or a connected country to migrate.";
     } else if (country.myTeamIndex == currPlayerIndex) {
       statusText = "That country only has 1 die, so it cannot attack or migrate.";
     } else {
@@ -90,7 +90,7 @@ void mousePressed() {
     if (!canActOnCountry(selectedCountry, country)) {
       setSelectedCountryIndex(-1);
       if (country.myTeamIndex == currPlayerIndex && areCountriesInSameOwnedGroup(selectedCountry, country)) {
-        statusText = "That country does not have room for all but one die.";
+        statusText = "That country is already full.";
       } else {
         statusText = "Deselected. Click one of your countries with 2+ dice.";
       }

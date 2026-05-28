@@ -2,18 +2,18 @@
 final int AI_DIFFICULTY_BEGINNER = 0;
 final int AI_DIFFICULTY_EASY = 1;
 final int AI_DIFFICULTY_NORMAL = 2;
-final int AI_DIFFICULTY_HARD = 3;
+final int AI_DIFFICULTY_BRUTAL = 3;
 final int[] AI_DIFFICULTY_VALUES = {
   AI_DIFFICULTY_BEGINNER,
   AI_DIFFICULTY_EASY,
   AI_DIFFICULTY_NORMAL,
-  AI_DIFFICULTY_HARD
+  AI_DIFFICULTY_BRUTAL
 };
 final String[] AI_DIFFICULTY_LABELS = {
   "Beginner",
   "Easy",
   "Normal",
-  "Hard"
+  "Brutal"
 };
 final int MAX_PLAYERS = 8;
 
@@ -228,7 +228,7 @@ boolean handleAIDifficultyKeyPressed() {
     return true;
   }
   if (key == '3') {
-    setAIDifficulty(AI_DIFFICULTY_HARD);
+    setAIDifficulty(AI_DIFFICULTY_BRUTAL);
     return true;
   }
   return false;
@@ -250,7 +250,7 @@ String getAIDifficultyName(int difficulty) {
   switch (difficulty) {
     case AI_DIFFICULTY_BEGINNER: return "Beginner";
     case AI_DIFFICULTY_EASY: return "Easy";
-    case AI_DIFFICULTY_HARD: return "Hard";
+    case AI_DIFFICULTY_BRUTAL: return "Brutal";
     default: return "Normal";
   }
 }

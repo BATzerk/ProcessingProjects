@@ -2,18 +2,32 @@
 // ======== AI STUFF ========
 // AI difficulty/tuning knobs. Higher thresholds make bots more cautious;
 // higher weights make them value that part of the board more strongly.
-final float AI_MIN_ATTACK_SCORE = 62;
+final float AI_MIN_ATTACK_SCORE = 54;
 final float AI_WIN_CHANCE_WEIGHT = 100;
 final float AI_CAPTURE_WEIGHT = 1.5;
 final float AI_EMPTY_CAPTURE_BONUS = 18;
 final float AI_GROUP_MERGE_WEIGHT = 6;
 final float AI_ELIMINATION_BONUS = 45;
-final float AI_EXPOSURE_PENALTY = 12;
-final float AI_RANDOMNESS = 4;
-final float AI_MIN_MIGRATION_SCORE = 18;
+final float AI_EXPOSURE_PENALTY = 16;
+final float AI_RANDOMNESS = 1;
+final float AI_MIN_MIGRATION_SCORE = 12;
 final float AI_MIGRATION_ATTACK_WEIGHT = 0.7;
 final float AI_MIGRATION_FRONTIER_WEIGHT = 7;
 final float AI_MIGRATION_SOURCE_DANGER_PENALTY = 10;
+final float AI_BRUTAL_MIN_ATTACK_SCORE = 72;
+final float AI_BRUTAL_MIN_MIGRATION_SCORE = 18;
+final float AI_BRUTAL_WIN_CHANCE_WEIGHT = 60;
+final float AI_BRUTAL_DICE_DESTROY_WEIGHT = 22;
+final float AI_BRUTAL_OWN_DICE_RISK_WEIGHT = 17;
+final float AI_BRUTAL_CAPTURE_WEIGHT = 1.0;
+final float AI_BRUTAL_GROUP_MERGE_WEIGHT = 7;
+final float AI_BRUTAL_ELIMINATION_BONUS = 80;
+final float AI_BRUTAL_TARGET_RISK_PENALTY = 16;
+final float AI_BRUTAL_SOURCE_RISK_PENALTY = 12;
+final float AI_BRUTAL_FOLLOWUP_WEIGHT = 0.3;
+final float AI_BRUTAL_MIGRATION_ATTACK_WEIGHT = 0.75;
+final float AI_BRUTAL_MIGRATION_TARGET_RISK_WEIGHT = 10;
+final float AI_BRUTAL_MIGRATION_SOURCE_RISK_WEIGHT = 9;
 final int AI_MOVE_ATTACK = 0;
 final int AI_MOVE_MIGRATE = 1;
 
@@ -110,6 +124,10 @@ class AI
   }
 
   float scoreAttack(Country attacker, Country defender) {
+    if (difficulty == AI_DIFFICULTY_BRUTAL) {
+      return scoreBrutalAttack(attacker, defender);
+    }
+
     float winChance = getWinChance(attacker.myDice, defender.myDice);
     float score = winChance * AI_WIN_CHANCE_WEIGHT;
 
@@ -122,8 +140,28 @@ class AI
     return score;
   }
 
+  float scoreBrutalAttack(Country attacker, Country defender) {
+    float winChance = getWinChance(attacker.myDice, defender.myDice);
+    float score = winChance * AI_BRUTAL_WIN_CHANCE_WEIGHT;
+
+    score += getExpectedEnemyDiceDestroyed(defender, winChance) * AI_BRUTAL_DICE_DESTROY_WEIGHT;
+    score -= getExpectedOwnDiceLost(attacker, winChance) * AI_BRUTAL_OWN_DICE_RISK_WEIGHT;
+    score += getCaptureValue(defender) * AI_BRUTAL_CAPTURE_WEIGHT;
+    score += getGroupMergeValue(attacker, defender) * AI_BRUTAL_GROUP_MERGE_WEIGHT;
+    score += getBrutalEliminationValue(defender);
+    score += getBrutalFollowupValue(attacker, defender) * AI_BRUTAL_FOLLOWUP_WEIGHT;
+    score -= getBrutalTargetRisk(attacker, defender) * AI_BRUTAL_TARGET_RISK_PENALTY;
+    score -= getBrutalSourceRisk(attacker, defender) * AI_BRUTAL_SOURCE_RISK_PENALTY;
+
+    return score;
+  }
+
   float scoreMigration(Country from, Country _to) {
-    int targetDiceAfterMigration = _to.myDice + from.myDice - 1;
+    if (difficulty == AI_DIFFICULTY_BRUTAL) {
+      return scoreBrutalMigration(from, _to);
+    }
+
+    int targetDiceAfterMigration = _to.myDice + getMigrationDiceCount(from, _to);
     float score = 0;
 
     score += getBestAttackOpportunity(_to, targetDiceAfterMigration) * AI_MIGRATION_ATTACK_WEIGHT;
@@ -134,11 +172,28 @@ class AI
     return score;
   }
 
+  float scoreBrutalMigration(Country from, Country _to) {
+    int diceMoved = getMigrationDiceCount(from, _to);
+    int targetDiceAfterMigration = _to.myDice + diceMoved;
+    int sourceDiceAfterMigration = from.myDice - diceMoved;
+    float score = 0;
+
+    score += (getBestBrutalAttackOpportunity(_to, targetDiceAfterMigration)
+      - getBestBrutalAttackOpportunity(_to, _to.myDice)) * AI_BRUTAL_MIGRATION_ATTACK_WEIGHT;
+    score += (getCountryAttackRisk(_to, _to.myDice, null)
+      - getCountryAttackRisk(_to, targetDiceAfterMigration, null)) * AI_BRUTAL_MIGRATION_TARGET_RISK_WEIGHT;
+    score -= getCountryAttackRisk(from, sourceDiceAfterMigration, _to) * AI_BRUTAL_MIGRATION_SOURCE_RISK_WEIGHT;
+    score += countNonFriendlyNeighbors(_to) * AI_MIGRATION_FRONTIER_WEIGHT;
+    score -= countNonFriendlyNeighbors(from) * AI_MIGRATION_SOURCE_DANGER_PENALTY;
+
+    return score;
+  }
+
   float getMinAttackScore() {
     switch (difficulty) {
       case AI_DIFFICULTY_BEGINNER: return -999;
       case AI_DIFFICULTY_EASY: return 74;
-      case AI_DIFFICULTY_HARD: return 54;
+      case AI_DIFFICULTY_BRUTAL: return AI_BRUTAL_MIN_ATTACK_SCORE;
       default: return AI_MIN_ATTACK_SCORE;
     }
   }
@@ -147,7 +202,7 @@ class AI
     switch (difficulty) {
       case AI_DIFFICULTY_BEGINNER: return -999;
       case AI_DIFFICULTY_EASY: return 34;
-      case AI_DIFFICULTY_HARD: return 12;
+      case AI_DIFFICULTY_BRUTAL: return AI_BRUTAL_MIN_MIGRATION_SCORE;
       default: return AI_MIN_MIGRATION_SCORE;
     }
   }
@@ -156,7 +211,7 @@ class AI
     switch (difficulty) {
       case AI_DIFFICULTY_BEGINNER: return 0;
       case AI_DIFFICULTY_EASY: return 4;
-      case AI_DIFFICULTY_HARD: return 16;
+      case AI_DIFFICULTY_BRUTAL: return 22;
       default: return AI_EXPOSURE_PENALTY;
     }
   }
@@ -165,7 +220,7 @@ class AI
     switch (difficulty) {
       case AI_DIFFICULTY_BEGINNER: return 80;
       case AI_DIFFICULTY_EASY: return 24;
-      case AI_DIFFICULTY_HARD: return 1;
+      case AI_DIFFICULTY_BRUTAL: return 0;
       default: return AI_RANDOMNESS;
     }
   }
@@ -179,6 +234,26 @@ class AI
       }
       float score = getWinChance(attackDice, defender.myDice) * AI_WIN_CHANCE_WEIGHT;
       score += getCaptureValue(defender) * AI_CAPTURE_WEIGHT;
+      if (score > bestScore) {
+        bestScore = score;
+      }
+    }
+    return bestScore;
+  }
+
+  float getBestBrutalAttackOpportunity(Country attacker, int attackDice) {
+    float bestScore = 0;
+    for (int i=0; i<attacker.neighbors.length; i++) {
+      Country defender = attacker.neighbors[i];
+      if (!canDiceAttackCountry(attackDice, defender)) {
+        continue;
+      }
+      float winChance = getWinChance(attackDice, defender.myDice);
+      float score = winChance * AI_BRUTAL_WIN_CHANCE_WEIGHT;
+      score += getExpectedEnemyDiceDestroyed(defender, winChance) * AI_BRUTAL_DICE_DESTROY_WEIGHT;
+      score -= (1 - winChance) * max(0, attackDice - 1) * AI_BRUTAL_OWN_DICE_RISK_WEIGHT;
+      score += getCaptureValue(defender) * AI_BRUTAL_CAPTURE_WEIGHT;
+      score += getBrutalEliminationValue(defender);
       if (score > bestScore) {
         bestScore = score;
       }
@@ -241,6 +316,70 @@ class AI
       }
     }
     return defenderCountries == 1 ? AI_ELIMINATION_BONUS : 0;
+  }
+
+  float getBrutalEliminationValue(Country defender) {
+    if (defender.myTeamIndex == NO_TEAM) {
+      return 0;
+    }
+
+    int defenderCountries = 0;
+    for (int i=0; i<countries.length; i++) {
+      if (countries[i].myTeamIndex == defender.myTeamIndex) {
+        defenderCountries++;
+      }
+    }
+    return defenderCountries == 1 ? AI_BRUTAL_ELIMINATION_BONUS : 0;
+  }
+
+  float getExpectedEnemyDiceDestroyed(Country defender, float winChance) {
+    if (defender.myTeamIndex == NO_TEAM) {
+      return 0;
+    }
+    return winChance * defender.myDice;
+  }
+
+  float getExpectedOwnDiceLost(Country attacker, float winChance) {
+    return (1 - winChance) * max(0, attacker.myDice - 1);
+  }
+
+  float getBrutalFollowupValue(Country attacker, Country defender) {
+    return getBestBrutalAttackOpportunity(defender, getDiceMovedAfterCapture(attacker, defender));
+  }
+
+  float getBrutalTargetRisk(Country attacker, Country defender) {
+    return getCountryAttackRisk(defender, getDiceMovedAfterCapture(attacker, defender), attacker);
+  }
+
+  float getBrutalSourceRisk(Country attacker, Country defender) {
+    int sourceDiceAfterCapture = attacker.myDice - getDiceMovedAfterCapture(attacker, defender);
+    return getCountryAttackRisk(attacker, sourceDiceAfterCapture, defender);
+  }
+
+  int getDiceMovedAfterCapture(Country attacker, Country defender) {
+    return min(attacker.myDice - 1, defender.cells.size());
+  }
+
+  float getCountryAttackRisk(Country country, int friendlyDice, Country ignoredCountry) {
+    if (friendlyDice <= 0) {
+      return 999;
+    }
+
+    float risk = 0;
+    for (int i=0; i<country.neighbors.length; i++) {
+      Country neighbor = country.neighbors[i];
+      if (ignoredCountry != null && neighbor.ID == ignoredCountry.ID) {
+        continue;
+      }
+      if (neighbor.myTeamIndex == myTeamIndex || neighbor.myTeamIndex == NO_TEAM || neighbor.myDice <= 1) {
+        continue;
+      }
+      if (neighbor.myDice * DICE_SIDES <= friendlyDice) {
+        continue;
+      }
+      risk += getWinChance(neighbor.myDice, friendlyDice) * friendlyDice;
+    }
+    return risk;
   }
 
   float getExposureValue(Country attacker, Country defender) {

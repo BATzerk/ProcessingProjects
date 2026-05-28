@@ -1,17 +1,23 @@
 boolean showDiceHistoryGraph = false;
 ArrayList<int[]> diceHistoryByTurn = new ArrayList<int[]>();
 ArrayList<Integer> diceHistoryTurnNumbers = new ArrayList<Integer>();
+ArrayList<int[]> superUnderdogVictoriesByTurn = new ArrayList<int[]>();
+int[] playerSuperUnderdogVictories;
 
 final float DICE_HISTORY_GRAPH_MARGIN = 34;
 final float DICE_HISTORY_GRAPH_LABEL_WIDTH = 76;
 final float DICE_HISTORY_GRAPH_LABEL_HEIGHT = 34;
 final float DICE_HISTORY_GRAPH_PADDING = 18;
 final float DICE_HISTORY_GRAPH_DOT_RADIUS = 4;
+final float DICE_HISTORY_SUPER_UNDERDOG_MARKER_SIZE = 13;
+final float DICE_HISTORY_SUPER_UNDERDOG_MARKER_GAP = 15;
 
 void resetDiceHistory() {
   setDiceHistoryGraphVisible(false);
   diceHistoryByTurn.clear();
   diceHistoryTurnNumbers.clear();
+  superUnderdogVictoriesByTurn.clear();
+  playerSuperUnderdogVictories = new int[playerCount];
   recordDiceHistorySample();
 }
 
@@ -26,6 +32,42 @@ void recordDiceHistorySample() {
   }
   diceHistoryByTurn.add(totals);
   diceHistoryTurnNumbers.add(turnCount);
+  superUnderdogVictoriesByTurn.add(copyPlayerSuperUnderdogVictories());
+}
+
+int[] copyPlayerSuperUnderdogVictories() {
+  if (playerSuperUnderdogVictories == null || playerSuperUnderdogVictories.length != playerCount) {
+    playerSuperUnderdogVictories = new int[playerCount];
+  }
+
+  int[] totals = new int[playerCount];
+  for (int i = 0; i < playerCount; i++) {
+    totals[i] = playerSuperUnderdogVictories[i];
+  }
+  return totals;
+}
+
+void recordSuperUnderdogVictory(int playerIndex) {
+  if (playerIndex < 0 || playerIndex >= playerCount) {
+    return;
+  }
+  if (playerSuperUnderdogVictories == null || playerSuperUnderdogVictories.length != playerCount) {
+    playerSuperUnderdogVictories = new int[playerCount];
+  }
+
+  playerSuperUnderdogVictories[playerIndex]++;
+  updateCurrentSuperUnderdogHistorySample();
+}
+
+void updateCurrentSuperUnderdogHistorySample() {
+  if (superUnderdogVictoriesByTurn.size() == 0) {
+    return;
+  }
+
+  int lastIndex = superUnderdogVictoriesByTurn.size() - 1;
+  if (diceHistoryTurnNumbers.get(lastIndex) == turnCount) {
+    superUnderdogVictoriesByTurn.set(lastIndex, copyPlayerSuperUnderdogVictories());
+  }
 }
 
 void toggleDiceHistoryGraph() {
@@ -74,6 +116,7 @@ void drawDiceHistoryGraph() {
   for (int i = 0; i < playerCount; i++) {
     drawDiceHistoryPlayerLine(i, plotX, plotY, plotW, plotH, maxDice);
   }
+  drawSuperUnderdogVictoryMarkers(plotX, plotY, plotW, plotH);
 
   drawDiceHistoryLegend(graphX + DICE_HISTORY_GRAPH_PADDING, graphY + DICE_HISTORY_GRAPH_PADDING);
 
@@ -119,6 +162,53 @@ void drawDiceHistoryPlayerLine(int playerIndex, float plotX, float plotY, float 
   }
 }
 
+void drawSuperUnderdogVictoryMarkers(float plotX, float plotY, float plotW, float plotH) {
+  if (superUnderdogVictoriesByTurn.size() == 0) {
+    return;
+  }
+
+  textAlign(CENTER, CENTER);
+  textSize(12);
+  for (int sampleIndex = 0; sampleIndex < superUnderdogVictoriesByTurn.size(); sampleIndex++) {
+    int[] totals = superUnderdogVictoriesByTurn.get(sampleIndex);
+    int[] previousTotals = sampleIndex > 0
+      ? superUnderdogVictoriesByTurn.get(sampleIndex - 1)
+      : new int[playerCount];
+    int markerIndex = 0;
+    for (int playerIndex = 0; playerIndex < totals.length; playerIndex++) {
+      int previousTotal = playerIndex < previousTotals.length ? previousTotals[playerIndex] : 0;
+      int victoriesThisSample = totals[playerIndex] - previousTotal;
+      for (int i = 0; i < victoriesThisSample; i++) {
+        float x = getDiceHistorySampleX(sampleIndex, plotX, plotW);
+        float y = plotY + plotH - 12 - markerIndex * DICE_HISTORY_SUPER_UNDERDOG_MARKER_GAP;
+        drawSuperUnderdogVictoryMarker(x, y, teamColor(playerIndex));
+        markerIndex++;
+      }
+    }
+  }
+}
+
+void drawSuperUnderdogVictoryMarker(float x, float y, color markerColor) {
+  pushMatrix();
+  translate(x, y);
+  stroke(0, 0, 0, 160);
+  scaledStrokeWeight(1.5);
+  fill(markerColor);
+  beginShape();
+  for (int i = 0; i < 10; i++) {
+    float radius = i % 2 == 0
+      ? DICE_HISTORY_SUPER_UNDERDOG_MARKER_SIZE * 0.55
+      : DICE_HISTORY_SUPER_UNDERDOG_MARKER_SIZE * 0.23;
+    float angle = -HALF_PI + i * TWO_PI / 10;
+    vertex(cos(angle) * radius, sin(angle) * radius);
+  }
+  endShape(CLOSE);
+  fill(255);
+  noStroke();
+  text("S", 0, 0);
+  popMatrix();
+}
+
 float getDiceHistorySampleX(int sampleIndex, float plotX, float plotW) {
   if (diceHistoryByTurn.size() <= 1) {
     return plotX;
@@ -139,6 +229,15 @@ void drawDiceHistoryLegend(float x, float y) {
     noStroke();
     ellipse(x + 6, rowY, 9, 9);
     fill(0, 0, 255, 210);
-    text(getPlayerName(i) + " " + getPlayerDiceTotal(i), x + 18, rowY);
+    text(getPlayerName(i) + " " + getPlayerDiceTotal(i) + "  S " + getPlayerSuperUnderdogVictoryTotal(i), x + 18, rowY);
   }
+}
+
+int getPlayerSuperUnderdogVictoryTotal(int playerIndex) {
+  if (playerSuperUnderdogVictories == null
+    || playerIndex < 0
+    || playerIndex >= playerSuperUnderdogVictories.length) {
+    return 0;
+  }
+  return playerSuperUnderdogVictories[playerIndex];
 }

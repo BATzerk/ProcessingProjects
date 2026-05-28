@@ -194,7 +194,7 @@ boolean isCountryRaisedForDrawing(int countryIndex) {
 
 int getVisibleCountryDiceCount(Country country) {
   if (isMigrationMode() && migrationFromCountry != null && country.ID == migrationFromCountry.ID) {
-    return 1;
+    return migrationFromCountry.myDice - migrationDiceCount;
   }
   return country.myDice;
 }
@@ -258,7 +258,7 @@ void migrateDice(Country from, Country _to) {
 }
 
 void startMigrationDice(Country from, Country _to) {
-  migrationDiceCount = from.myDice - 1;
+  migrationDiceCount = getMigrationDiceCount(from, _to);
   migrationFromCountry = from;
   migrationToCountry = _to;
   enterMigrationMode();
@@ -288,7 +288,7 @@ void finishMigrationDice() {
   }
 
   migrationToCountry.myDice += migrationDiceCount;
-  migrationFromCountry.myDice = 1;
+  migrationFromCountry.myDice -= migrationDiceCount;
   if (isCurrentPlayerHuman()) {
     statusText = "Moved " + migrationDiceCount + " dice. Turn ended.";
   }
